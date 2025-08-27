@@ -1,28 +1,28 @@
 package hnu.dll.entity;
 
-import hnu.dll.basic_entity.Location;
+import hnu.dll.basic_entity.ThreeDLocation;
 
 
 public abstract class Task extends Entity {
 
-    private Location startLocation;
-    private Location endLocation;
+    private ThreeDLocation startThreeDLocation;
+    private ThreeDLocation endThreeDLocation;
     private Double fetchTime;
     private Double sendOffTime;
 
-    public Task(Location startLocation, Location endLocation, Double fetchTime, Double sendOffTime) {
-        this.startLocation = startLocation;
-        this.endLocation = endLocation;
+    public Task(ThreeDLocation startThreeDLocation, ThreeDLocation endThreeDLocation, Double fetchTime, Double sendOffTime) {
+        this.startThreeDLocation = startThreeDLocation;
+        this.endThreeDLocation = endThreeDLocation;
         this.fetchTime = fetchTime;
         this.sendOffTime = sendOffTime;
     }
 
-    public Location getStartLocation() {
-        return startLocation;
+    public ThreeDLocation getStartLocation() {
+        return startThreeDLocation;
     }
 
-    public Location getEndLocation() {
-        return endLocation;
+    public ThreeDLocation getEndLocation() {
+        return endThreeDLocation;
     }
 
     public Double getFetchTime() {

@@ -1,20 +1,38 @@
 package hnu.dll.entity;
 
-import hnu.dll.basic_entity.Location;
+import hnu.dll.basic_entity.PlaneLocation;
+import hnu.dll.basic_entity.ThreeDLocation;
+
+import java.util.List;
 
 public class Stair extends Entity {
 
-    private Location bottomLocation;
-    private Location topLocation;
-    private Location intermediatePointLocation;
-
+    private PlaneLocation planeLocation;
+    private Integer layerSize;
+    private List<ThreeDLocation> innerNodeList;
     private Double segmentLength;
 
-    public Stair(String name, Location bottomLocation, Location topLocation, Location intermediatePointLocation, Double segmentLength) {
+    public Stair(String name, PlaneLocation planeLocation, Integer layerSize, List<ThreeDLocation> innerNodeList, Double segmentLength) {
         super(name);
-        this.bottomLocation = bottomLocation;
-        this.topLocation = topLocation;
-        this.intermediatePointLocation = intermediatePointLocation;
+        this.planeLocation = planeLocation;
+        this.layerSize = layerSize;
+        this.innerNodeList = innerNodeList;
         this.segmentLength = segmentLength;
+    }
+
+    public PlaneLocation getPlaneLocation() {
+        return planeLocation;
+    }
+
+    public Integer getLayerSize() {
+        return layerSize;
+    }
+
+    public List<ThreeDLocation> getInnerNodeList() {
+        return innerNodeList;
+    }
+
+    public Double getSegmentLength() {
+        return segmentLength;
     }
 }

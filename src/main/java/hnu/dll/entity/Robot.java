@@ -1,6 +1,6 @@
 package hnu.dll.entity;
 
-import hnu.dll.basic_entity.Location;
+import hnu.dll.basic_entity.ThreeDLocation;
 
 
 public class Robot extends Entity {
@@ -11,7 +11,7 @@ public class Robot extends Entity {
     private Double stairVelocity;
     private Double capacity;
 
-    private Location location;
+    private ThreeDLocation threeDLocation;
 
     public Robot(String name, String type, Double flatGroundVelocity, Double stairVelocity, Double capacity) {
         super(name);
@@ -46,12 +46,12 @@ public class Robot extends Entity {
         this.capacity = capacity;
     }
 
-    public Location getLocation() {
-        return location;
+    public ThreeDLocation getLocation() {
+        return threeDLocation;
     }
 
-    public void setLocation(Location location) {
-        this.location = location;
+    public void setLocation(ThreeDLocation threeDLocation) {
+        this.threeDLocation = threeDLocation;
     }
 
 

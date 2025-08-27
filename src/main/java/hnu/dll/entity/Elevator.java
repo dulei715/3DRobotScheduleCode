@@ -1,29 +1,35 @@
 package hnu.dll.entity;
 
-import hnu.dll.basic_entity.Location;
-import hnu.dll.basic_entity.Status;
-
-import java.util.Map;
+import hnu.dll.basic_entity.PlaneLocation;
+import hnu.dll.basic_entity.ThreeDLocation;
 
 public class Elevator extends Entity {
 
     private Double velocity;
     private Double openingOrCloseTimeCost;
 
-    private Integer layer;
+    private Integer layerSize;
+    private PlaneLocation planeLocation;
 
-    public Elevator(String name, Double velocity, Double openingOrCloseTimeCost) {
+    private Integer currentLayer;
+
+
+
+    public Double getCrossFloorRunningTime(Integer startLayer, Integer endLayer, Double averageLayerHeight) {
+        return Math.abs(endLayer - startLayer) * averageLayerHeight / this.velocity;
+    }
+
+
+    public Elevator(String name, Double velocity, Double openingOrCloseTimeCost, Integer layerSize, PlaneLocation planeLocation) {
         super(name);
         this.velocity = velocity;
         this.openingOrCloseTimeCost = openingOrCloseTimeCost;
+        this.layerSize = layerSize;
+        this.planeLocation = planeLocation;
     }
 
-    public Integer getLayer() {
-        return layer;
-    }
-
-    public void setLayer(Integer layer) {
-        this.layer = layer;
+    public void setCurrentLayer(Integer currentLayer) {
+        this.currentLayer = currentLayer;
     }
 
     public Double getVelocity() {
@@ -34,7 +40,15 @@ public class Elevator extends Entity {
         return openingOrCloseTimeCost;
     }
 
-    public Double getCrossFloorRunningTime(Integer startLayer, Integer endLayer, Double averageLayerHeight) {
-        return Math.abs(endLayer - startLayer) * averageLayerHeight / this.velocity;
+    public Integer getLayerSize() {
+        return layerSize;
+    }
+
+    public PlaneLocation getPlaneLocation() {
+        return planeLocation;
+    }
+
+    public Integer getCurrentLayer() {
+        return currentLayer;
     }
 }
