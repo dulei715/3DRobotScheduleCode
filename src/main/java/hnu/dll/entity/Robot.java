@@ -2,6 +2,8 @@ package hnu.dll.entity;
 
 import hnu.dll.basic_entity.ThreeDLocation;
 
+import java.util.Objects;
+
 
 public class Robot extends Entity {
 
@@ -57,5 +59,18 @@ public class Robot extends Entity {
 
     public String getType() {
         return type;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Robot robot = (Robot) o;
+        return Objects.equals(type, robot.type) && Objects.equals(flatGroundVelocity, robot.flatGroundVelocity) && Objects.equals(stairVelocity, robot.stairVelocity) && Objects.equals(capacity, robot.capacity) && Objects.equals(threeDLocation, robot.threeDLocation);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, flatGroundVelocity, stairVelocity, capacity, threeDLocation);
     }
 }

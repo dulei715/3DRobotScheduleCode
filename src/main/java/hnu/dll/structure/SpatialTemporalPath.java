@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
+@Deprecated
 public class SpatialTemporalPath implements Comparable<SpatialTemporalPath>{
     private LinkedList<BasicPair<ThreeDLocation, Entity>> path;
 

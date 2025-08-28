@@ -6,7 +6,7 @@ import hnu.dll.entity.Entity;
 
 import java.util.Objects;
 
-public class Anchor extends Entity {
+public class Anchor extends Entity implements Comparable<Anchor> {
     private ThreeDLocation threeDLocation;
 
     public Anchor(String name, ThreeDLocation threeDLocation) {
@@ -41,5 +41,10 @@ public class Anchor extends Entity {
     @Override
     public int hashCode() {
         return Objects.hashCode(threeDLocation);
+    }
+
+    @Override
+    public int compareTo(Anchor anchor) {
+        return this.threeDLocation.compareTo(anchor.threeDLocation);
     }
 }

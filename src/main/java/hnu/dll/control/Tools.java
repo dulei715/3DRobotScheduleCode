@@ -3,13 +3,9 @@ package hnu.dll.control;
 import hnu.dll.basic_entity.PlaneLocation;
 import hnu.dll.basic_entity.ThreeDLocation;
 import hnu.dll.config.Constant;
-import hnu.dll.entity.Elevator;
-import hnu.dll.entity.Entity;
-import hnu.dll.entity.Robot;
-import hnu.dll.entity.Stair;
-import hnu.dll.structure.Anchor;
-import hnu.dll.structure.SimpleGraph;
-import hnu.dll.structure.TimeWeightedGraph;
+import hnu.dll.entity.*;
+import hnu.dll.structure.*;
+import hnu.dll.structure.basic_structure.BasicPair;
 
 import java.util.*;
 
@@ -30,7 +26,7 @@ public class Tools {
      * @param robot
      * @return
      */
-    public static TimeWeightedGraph timeWeightedGraph(SimpleGraph originalGraph, Robot robot) {
+    public static TimeWeightedGraph getTimeWeightedGraph(SimpleGraph originalGraph, Robot robot) {
         TimeWeightedGraph timeWeightedGraph = new TimeWeightedGraph();
         List<Set<Entity>> classifiedNodeSetList = originalGraph.getNodeSetsClassifiedByTypes(Tools.SupportTypes);
         Map<Entity, Double> nextNodeAndWeight;
@@ -122,6 +118,90 @@ public class Tools {
         return timeWeightedGraph;
     }
 
-    public static List<Entity>
+
+    public static List<Path> getTopKShortestPath(TimeWeightedGraph graph, ThreeDLocation startLocation, ThreeDLocation endLocation, Integer topKSize) {
+        List<Path> result = null;
+        // todo: return top k nearest paths
+        return result;
+    }
+
+    public static BipartiteGraph<Task, Robot, Double> extractTopOneToConstructBipartiteGraph(Map<Task, Map<Robot, SortedPathStructure>> topKMap) {
+        List<Task> taskList = new ArrayList<>();
+        List<Robot> robotList = new ArrayList<>();
+        Task tempTask;
+        Robot tempRobot;
+        Path tempPath;
+        Map<Robot, SortedPathStructure> tempMap;
+        BipartiteGraph<Task, Robot, Double> bipartiteGraph = new BipartiteGraph();
+        for (Map.Entry<Task, Map<Robot, SortedPathStructure>> taskMapEntry : topKMap.entrySet()) {
+            tempTask = taskMapEntry.getKey();
+            tempMap = taskMapEntry.getValue();
+            for (Map.Entry<Robot, SortedPathStructure> entry : tempMap.entrySet()) {
+                tempRobot = entry.getKey();
+                tempPath = entry.getValue().getFirst();
+                bipartiteGraph.addValue(tempTask, tempRobot, tempPath.getWeightedSum());
+            }
+        }
+        return bipartiteGraph;
+    }
+
+    public static Match<Task, Robot> getMatchByKuhnMunkres(BipartiteGraph<Task, Robot, Double> graph) {
+        Match<Task, Robot> match = new Match();
+        // todo: return a match by Kuhn Munkres algorithm
+        return match;
+    }
+
+    public static SortedPathStructure topKPathTime(TimeWeightedGraph graph, ThreeDLocation startLocation, ThreeDLocation endLocation, Integer topKSize) {
+        Double timeCost;
+//        TimeWeightedGraph graph = getTimeWeightedGraph(simpleGraph, robot);
+        List<Path> topKPathList = getTopKShortestPath(graph, startLocation, endLocation, topKSize);
+//        List<BasicPair<Path, Double>> resultList = new ArrayList<>();
+        SortedPathStructure result = new SortedPathStructure();
+        for (Path path : topKPathList) {
+//            timeCost = path.getWeightedSum();
+//            result.add(new BasicPair<>(path, timeCost));
+            result.addPath(path);
+        }
+        return result;
+    }
+
+    public static BasicPair<Match<Task, Robot>, Map<Task, Map<Robot, SortedPathStructure>>> taskAssignment(TimeWeightedGraph graph, List<Task> taskList, List<Robot> robotList, Integer topKSize) {
+        ThreeDLocation startLocation, innerLocation, endLocation;
+        SortedPathStructure firstSegmentSortedPaths, lastSegmentSortedPath;
+        Path newPath;
+        Map<Robot, SortedPathStructure> tempMap;
+        Double firstTimeCost, lastTimeCost, extraTime, newTimeCost;
+        SortedPathStructure tempStructure;
+        Map<Task, Map<Robot, SortedPathStructure>> topKMap = new HashMap<>();
+        for (Task task : taskList) {
+            extraTime = task.getFetchTime() + task.getSendOffTime();
+            innerLocation = task.getStartLocation();
+            endLocation = task.getEndLocation();
+            lastSegmentSortedPath = topKPathTime(graph, innerLocation, endLocation, topKSize);
+            tempMap = new HashMap<>();
+            for (Robot robot : robotList) {
+                if (task.getOccupyingSpace() > robot.getCapacity()) {
+                    continue;
+                }
+                tempStructure = new SortedPathStructure();
+                startLocation = robot.getLocation();
+                firstSegmentSortedPaths = topKPathTime(graph, startLocation, innerLocation, topKSize);
+                for (Path firstPath : firstSegmentSortedPaths.getSortedPaths()) {
+                    for (Path lastPath : lastSegmentSortedPath.getSortedPaths()) {
+                        newPath = Path.getCombinePath(firstPath, lastPath, extraTime);
+                        tempStructure.addPath(newPath);
+                    }
+                }
+
+                tempMap.put(robot, tempStructure);
+            }
+            topKMap.put(task, tempMap);
+        }
+        BipartiteGraph<Task, Robot, Double> bipartiteGraph = extractTopOneToConstructBipartiteGraph(topKMap);
+        Match<Task, Robot> match = getMatchByKuhnMunkres(bipartiteGraph);
+        return new BasicPair<>(match, topKMap);
+    }
+
+    
 
 }

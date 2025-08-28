@@ -7,16 +7,19 @@ import hnu.dll.structure.basic_structure.BasicPair;
 import java.util.PriorityQueue;
 
 public class SortedPathStructure {
-    private PriorityQueue<SpatialTemporalPath> sortedPaths = new PriorityQueue<>();
+    private PriorityQueue<Path> sortedPaths = new PriorityQueue<>();
 
     public SortedPathStructure() {
         this.sortedPaths = new PriorityQueue<>();
     }
-    public void addPath(SpatialTemporalPath path) {
+    public void addPath(Path path) {
         sortedPaths.add(path);
     }
-    public SpatialTemporalPath getFirst() {
+    public Path getFirst() {
         return this.sortedPaths.peek();
     }
-    
+
+    public PriorityQueue<Path> getSortedPaths() {
+        return sortedPaths;
+    }
 }
