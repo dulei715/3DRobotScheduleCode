@@ -119,8 +119,8 @@ public class Tools {
     }
 
 
-    public static List<Path> getTopKShortestPath(TimeWeightedGraph graph, ThreeDLocation startLocation, ThreeDLocation endLocation, Integer topKSize) {
-        List<Path> result = null;
+    public static List<AnchorPointPath> getTopKShortestPath(TimeWeightedGraph graph, ThreeDLocation startLocation, ThreeDLocation endLocation, Integer topKSize) {
+        List<AnchorPointPath> result = null;
         // todo: return top k nearest paths
         return result;
     }
@@ -130,7 +130,7 @@ public class Tools {
         List<Robot> robotList = new ArrayList<>();
         Task tempTask;
         Robot tempRobot;
-        Path tempPath;
+        AnchorPointPath tempPath;
         Map<Robot, SortedPathStructure> tempMap;
         BipartiteGraph<Task, Robot, Double> bipartiteGraph = new BipartiteGraph();
         for (Map.Entry<Task, Map<Robot, SortedPathStructure>> taskMapEntry : topKMap.entrySet()) {
@@ -154,10 +154,10 @@ public class Tools {
     public static SortedPathStructure topKPathTime(TimeWeightedGraph graph, ThreeDLocation startLocation, ThreeDLocation endLocation, Integer topKSize) {
         Double timeCost;
 //        TimeWeightedGraph graph = getTimeWeightedGraph(simpleGraph, robot);
-        List<Path> topKPathList = getTopKShortestPath(graph, startLocation, endLocation, topKSize);
+        List<AnchorPointPath> topKPathList = getTopKShortestPath(graph, startLocation, endLocation, topKSize);
 //        List<BasicPair<Path, Double>> resultList = new ArrayList<>();
         SortedPathStructure result = new SortedPathStructure();
-        for (Path path : topKPathList) {
+        for (AnchorPointPath path : topKPathList) {
 //            timeCost = path.getWeightedSum();
 //            result.add(new BasicPair<>(path, timeCost));
             result.addPath(path);
@@ -168,13 +168,15 @@ public class Tools {
     public static BasicPair<Match<Task, Robot>, Map<Task, Map<Robot, SortedPathStructure>>> taskAssignment(TimeWeightedGraph graph, List<Task> taskList, List<Robot> robotList, Integer topKSize) {
         ThreeDLocation startLocation, innerLocation, endLocation;
         SortedPathStructure firstSegmentSortedPaths, lastSegmentSortedPath;
-        Path newPath;
+        AnchorPointPath newPath;
         Map<Robot, SortedPathStructure> tempMap;
-        Double firstTimeCost, lastTimeCost, extraTime, newTimeCost;
+        Double firstTimeCost, lastTimeCost, fetchTaskTimeCost, newTimeCost, deliveryTaskTimeCost;
         SortedPathStructure tempStructure;
         Map<Task, Map<Robot, SortedPathStructure>> topKMap = new HashMap<>();
         for (Task task : taskList) {
-            extraTime = task.getFetchTime() + task.getSendOffTime();
+//            extraTime = task.getFetchTime() + task.getSendOffTime();
+            fetchTaskTimeCost = task.getFetchTime();
+            deliveryTaskTimeCost = task.getSendOffTime();
             innerLocation = task.getStartLocation();
             endLocation = task.getEndLocation();
             lastSegmentSortedPath = topKPathTime(graph, innerLocation, endLocation, topKSize);
@@ -186,9 +188,9 @@ public class Tools {
                 tempStructure = new SortedPathStructure();
                 startLocation = robot.getLocation();
                 firstSegmentSortedPaths = topKPathTime(graph, startLocation, innerLocation, topKSize);
-                for (Path firstPath : firstSegmentSortedPaths.getSortedPaths()) {
-                    for (Path lastPath : lastSegmentSortedPath.getSortedPaths()) {
-                        newPath = Path.getCombinePath(firstPath, lastPath, extraTime);
+                for (AnchorPointPath firstPath : firstSegmentSortedPaths.getSortedPaths()) {
+                    for (AnchorPointPath lastPath : lastSegmentSortedPath.getSortedPaths()) {
+                        newPath = AnchorPointPath.getCombinePathWithBothTailWeights(firstPath, lastPath, fetchTaskTimeCost, deliveryTaskTimeCost);
                         tempStructure.addPath(newPath);
                     }
                 }
@@ -202,6 +204,11 @@ public class Tools {
         return new BasicPair<>(match, topKMap);
     }
 
-    
+    public static BasicPair<Map<Task, Map<Robot, AnchorPointPath>>, Double> getPlanPath(TimeWeightedGraph graph, List<Robot> robotList, Job job) {
+        job.initialTaskStartTimeAndEndTime();
+        List<Task> taskList = job.getTaskList();
+        BasicPair<Match<Task, Robot>, Map<Task, Map<Robot, SortedPathStructure>>> matchMapBasicPair = taskAssignment(graph, taskList, robotList, Constant.topKSize);
+
+    }
 
 }

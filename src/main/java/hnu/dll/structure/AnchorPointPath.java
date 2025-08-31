@@ -1,23 +1,20 @@
 package hnu.dll.structure;
 
-import hnu.dll.basic_entity.ThreeDLocation;
-import hnu.dll.entity.Entity;
 import hnu.dll.structure.basic_structure.BasicPair;
 
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.LinkedList;
 
-public class Path implements Comparable<Path>{
+public class AnchorPointPath implements Comparable<AnchorPointPath>{
     private Anchor startAnchor;
     private LinkedList<BasicPair<Double, Anchor>> internalDataList = null;
 
-    public Path(Anchor startAnchor) {
+    public AnchorPointPath(Anchor startAnchor) {
         this.startAnchor = startAnchor;
         this.internalDataList = new LinkedList<>();
     }
 
-    public Path(Anchor startAnchor, BasicPair<Double, Anchor>... internalPair) {
+    public AnchorPointPath(Anchor startAnchor, BasicPair<Double, Anchor>... internalPair) {
         this.startAnchor = startAnchor;
         this.internalDataList = new LinkedList<>();
         this.internalDataList.addAll(Arrays.asList(internalPair));
@@ -41,9 +38,12 @@ public class Path implements Comparable<Path>{
         pair.setKey(nextWeight);
     }
 
+    public Anchor getLastAnchor() {
+        return this.internalDataList.getLast().getValue();
+    }
 
 
-    public void addPath(Path path, Double weighted) {
+    public void addPath(AnchorPointPath path, Double weighted) {
         this.internalDataList.add(new BasicPair<>(weighted, path.startAnchor));
         this.internalDataList.addAll(path.internalDataList);
     }
@@ -52,7 +52,7 @@ public class Path implements Comparable<Path>{
      * 传入的path的头是调用该函数的path的尾
      * @param path
      */
-    public void addPathWithTailEqualsHead(Path path) {
+    public void addPathWithTailEqualsHead(AnchorPointPath path) {
         this.internalDataList.addAll(path.internalDataList);
     }
 
@@ -62,8 +62,8 @@ public class Path implements Comparable<Path>{
      * @param pathB
      * @return
      */
-    public static Path getCombinePath(Path pathA, Path pathB) {
-        Path path = new Path(pathA.startAnchor);
+    public static AnchorPointPath getCombinePathWithBothTailWeights(AnchorPointPath pathA, AnchorPointPath pathB) {
+        AnchorPointPath path = new AnchorPointPath(pathA.startAnchor);
         path.internalDataList.addAll(pathA.internalDataList);
         path.internalDataList.addAll(pathB.internalDataList);
         return path;
@@ -73,14 +73,32 @@ public class Path implements Comparable<Path>{
      * pathA的尾部和pathB的头部之间有权重（尽管如此，盖尾部和该头部也可能重合，这时会构造出自环）
      * @param pathA
      * @param pathB
-     * @param weight
      * @return
      */
-    public static Path getCombinePath(Path pathA, Path pathB, Double weight) {
-        Path path = new Path(pathA.startAnchor);
+//    @Deprecated
+//    public static AnchorPointPath getCombinePath(AnchorPointPath pathA, AnchorPointPath pathB, Double weight) {
+//        AnchorPointPath path = new AnchorPointPath(pathA.startAnchor);
+//        path.internalDataList.addAll(pathA.internalDataList);
+//        path.addInternalPair(new BasicPair<>(weight, pathB.startAnchor));
+//        path.internalDataList.addAll(pathB.internalDataList);
+//        return path;
+//    }
+
+//    public static AnchorPointPath getCombinePath(AnchorPointPath pathA, AnchorPointPath pathB, Double jointWeight, Double tailWeight) {
+//        AnchorPointPath path = new AnchorPointPath(pathA.startAnchor);
+//        path.internalDataList.addAll(pathA.internalDataList);
+//        path.addInternalPair(new BasicPair<>(jointWeight, pathB.startAnchor));
+//        path.internalDataList.addAll(pathB.internalDataList);
+//        path.internalDataList.add(new BasicPair<>(tailWeight, pathB.getLastAnchor()))
+//        return path;
+//    }
+    // todo
+    public static AnchorPointPath getCombinePathWithBothTailWeights(AnchorPointPath pathA, AnchorPointPath pathB, Double jointWeight, Double tailWeight) {
+        AnchorPointPath path = new AnchorPointPath(pathA.startAnchor);
         path.internalDataList.addAll(pathA.internalDataList);
-        path.addInternalPair(new BasicPair<>(weight, pathB.startAnchor));
+        path.addInternalPair(new BasicPair<>(jointWeight, pathB.startAnchor));
         path.internalDataList.addAll(pathB.internalDataList);
+        path.internalDataList.add(new BasicPair<>(tailWeight, pathB.getLastAnchor()))
         return path;
     }
 
@@ -93,7 +111,7 @@ public class Path implements Comparable<Path>{
         return result;
     }
 
-    public Entity getStartAnchor() {
+    public Anchor getStartAnchor() {
         return startAnchor;
     }
 
@@ -113,7 +131,7 @@ public class Path implements Comparable<Path>{
     }
 
     @Override
-    public int compareTo(Path path) {
+    public int compareTo(AnchorPointPath path) {
         Double weightA = this.getWeightedSum();
         Double weightB = path.getWeightedSum();
         if (!weightA.equals(weightB)) {

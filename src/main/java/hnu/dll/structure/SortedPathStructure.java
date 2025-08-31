@@ -1,25 +1,21 @@
 package hnu.dll.structure;
 
-import hnu.dll.basic_entity.ThreeDLocation;
-import hnu.dll.entity.Entity;
-import hnu.dll.structure.basic_structure.BasicPair;
-
 import java.util.PriorityQueue;
 
 public class SortedPathStructure {
-    private PriorityQueue<Path> sortedPaths = new PriorityQueue<>();
+    private PriorityQueue<AnchorPointPath> sortedPaths = new PriorityQueue<>();
 
     public SortedPathStructure() {
         this.sortedPaths = new PriorityQueue<>();
     }
-    public void addPath(Path path) {
+    public void addPath(AnchorPointPath path) {
         sortedPaths.add(path);
     }
-    public Path getFirst() {
+    public AnchorPointPath getFirst() {
         return this.sortedPaths.peek();
     }
 
-    public PriorityQueue<Path> getSortedPaths() {
+    public PriorityQueue<AnchorPointPath> getSortedPaths() {
         return sortedPaths;
     }
 }

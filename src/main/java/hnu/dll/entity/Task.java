@@ -13,6 +13,9 @@ public abstract class Task extends Entity {
     private Double sendOffTime;
     private Double occupyingSpace;
 
+    private Double startTime;
+    private Double endTime;
+
     public Task(String name, ThreeDLocation startLocation, ThreeDLocation endLocation, Double fetchTime, Double sendOffTime, Double occupyingSpace) {
         super(name);
         this.startLocation = startLocation;
@@ -40,6 +43,22 @@ public abstract class Task extends Entity {
 
     public Double getOccupyingSpace() {
         return occupyingSpace;
+    }
+
+    public Double getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(Double startTime) {
+        this.startTime = startTime;
+    }
+
+    public Double getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(Double endTime) {
+        this.endTime = endTime;
     }
 
     @Override
