@@ -1,4 +1,4 @@
-package hnu.dll.structure;
+package hnu.dll.structure.path;
 
 import hnu.dll.basic_entity.ThreeDLocation;
 import hnu.dll.entity.Entity;
@@ -6,7 +6,6 @@ import hnu.dll.structure.basic_structure.BasicPair;
 
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Objects;
 
 @Deprecated

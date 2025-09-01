@@ -1,11 +1,12 @@
-package hnu.dll.structure;
+package hnu.dll.structure.path;
 
+import hnu.dll.structure.Anchor;
 import hnu.dll.structure.basic_structure.BasicPair;
 
 import java.util.Arrays;
 import java.util.LinkedList;
 
-public class AnchorPointPath implements Comparable<AnchorPointPath>{
+public class AnchorPointPath extends Path implements Comparable<AnchorPointPath>{
     private Anchor startAnchor;
     private LinkedList<BasicPair<Double, Anchor>> internalDataList = null;
 
@@ -98,7 +99,7 @@ public class AnchorPointPath implements Comparable<AnchorPointPath>{
         path.internalDataList.addAll(pathA.internalDataList);
         path.addInternalPair(new BasicPair<>(jointWeight, pathB.startAnchor));
         path.internalDataList.addAll(pathB.internalDataList);
-        path.internalDataList.add(new BasicPair<>(tailWeight, pathB.getLastAnchor()))
+        path.internalDataList.add(new BasicPair<>(tailWeight, pathB.getLastAnchor()));
         return path;
     }
 

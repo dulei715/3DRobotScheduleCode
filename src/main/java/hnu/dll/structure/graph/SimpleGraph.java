@@ -1,4 +1,4 @@
-package hnu.dll.structure;
+package hnu.dll.structure.graph;
 
 import hnu.dll.entity.Entity;
 

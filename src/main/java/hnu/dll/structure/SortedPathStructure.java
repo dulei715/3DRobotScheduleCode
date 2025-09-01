@@ -1,21 +1,27 @@
 package hnu.dll.structure;
 
+import hnu.dll.structure.path.AnchorPointPath;
+import hnu.dll.structure.path.Path;
+
 import java.util.PriorityQueue;
 
-public class SortedPathStructure {
-    private PriorityQueue<AnchorPointPath> sortedPaths = new PriorityQueue<>();
+public class SortedPathStructure<T extends Path> {
+    private PriorityQueue<T> sortedPaths = new PriorityQueue<>();
 
     public SortedPathStructure() {
         this.sortedPaths = new PriorityQueue<>();
     }
-    public void addPath(AnchorPointPath path) {
+    public void addPath(T path) {
         sortedPaths.add(path);
     }
-    public AnchorPointPath getFirst() {
+    public T getFirst() {
         return this.sortedPaths.peek();
     }
 
-    public PriorityQueue<AnchorPointPath> getSortedPaths() {
+    public PriorityQueue<T> getSortedPaths() {
         return sortedPaths;
     }
+
+
+
 }

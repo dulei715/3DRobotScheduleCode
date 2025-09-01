@@ -1,17 +1,22 @@
-package hnu.dll.structure;
+package hnu.dll.structure.path;
 
 import hnu.dll.config.Constant;
+import hnu.dll.structure.Anchor;
 import hnu.dll.structure.basic_structure.BasicPair;
 
 import java.util.LinkedList;
 
-public class TimePointPath implements Comparable<TimePointPath>{
+public class TimePointPath extends Path implements Comparable<TimePointPath>{
 
     // 第一个是startTime所在位置，每个相邻元素之间间隔TimeUnit大小
     private LinkedList<Anchor> timeStreamAnchorList;
 
     private TimePointPath(LinkedList<Anchor> timeStreamAnchorList) {
         this.timeStreamAnchorList = timeStreamAnchorList;
+    }
+
+    public Integer getTimeLength() {
+        return this.timeStreamAnchorList.size();
     }
 
     /**
@@ -38,7 +43,9 @@ public class TimePointPath implements Comparable<TimePointPath>{
     }
 
     public void insertAnchor(Anchor anchor, Integer timeIndex, Integer timeSlotLength) {
-                
+        for (int i = 0; i < timeSlotLength; ++i) {
+            this.timeStreamAnchorList.add(timeIndex, anchor);
+        }
     }
 
     @Override
@@ -58,6 +65,6 @@ public class TimePointPath implements Comparable<TimePointPath>{
                 return cmp;
             }
         }
-        return this.startTimeSlot.compareTo(path.startTimeSlot);
+        return 0;
     }
 }

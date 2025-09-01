@@ -6,6 +6,9 @@ import hnu.dll.config.Constant;
 import hnu.dll.entity.*;
 import hnu.dll.structure.*;
 import hnu.dll.structure.basic_structure.BasicPair;
+import hnu.dll.structure.graph.BipartiteGraph;
+import hnu.dll.structure.graph.SimpleGraph;
+import hnu.dll.structure.path.AnchorPointPath;
 
 import java.util.*;
 

@@ -1,5 +1,7 @@
 package hnu.dll.structure;
 
+import hnu.dll.structure.path.SpatialTemporalPath;
+
 import java.util.PriorityQueue;
 
 @Deprecated
