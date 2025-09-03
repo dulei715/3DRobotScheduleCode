@@ -18,6 +18,7 @@ public class SortedPathStructure<T extends Path> {
         return this.sortedPaths.peek();
     }
 
+
     public PriorityQueue<T> getSortedPaths() {
         return sortedPaths;
     }

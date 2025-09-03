@@ -10,6 +10,7 @@ public class TimePointPath extends Path implements Comparable<TimePointPath>{
 
     // 第一个是startTime所在位置，每个相邻元素之间间隔TimeUnit大小
     private LinkedList<Anchor> timeStreamAnchorList;
+    // todo: add entity
 
     private TimePointPath(LinkedList<Anchor> timeStreamAnchorList) {
         this.timeStreamAnchorList = timeStreamAnchorList;
@@ -17,6 +18,10 @@ public class TimePointPath extends Path implements Comparable<TimePointPath>{
 
     public Integer getTimeLength() {
         return this.timeStreamAnchorList.size();
+    }
+
+    public Anchor getAnchorByIndex(Integer index) {
+        return this.timeStreamAnchorList.get(index);
     }
 
     /**

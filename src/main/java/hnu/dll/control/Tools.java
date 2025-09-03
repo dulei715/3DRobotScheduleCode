@@ -236,6 +236,37 @@ public class Tools {
         return result;
     }
 
+    private static Integer getMaximumSpatialPathLength(Map<Task, Map<Robot, SortedPathStructure<TimePointPath>>> temporalPathMap) {
+        Integer pathLength = 0;
+        TimePointPath tempPath;
+        for (Map<Robot, SortedPathStructure<TimePointPath>> tempMap : temporalPathMap.values()) {
+            for (SortedPathStructure<TimePointPath> pathStructure : tempMap.values()) {
+                tempPath = pathStructure.getFirst();
+                pathLength = Math.max(pathLength, tempPath.getTimeLength());
+            }
+        }
+        return pathLength;
+    }
+
+    private static Map<Entity, Set<SortedPathStructure<TimePointPath>>> getConflictMap(Map<Task, Map<Robot, SortedPathStructure<TimePointPath>>> temporalPathMap, Integer timeSlot) {
+        Map<Entity, Set<SortedPathStructure<TimePointPath>>> result = new HashMap<>();
+        TimePointPath tempPath;
+        Anchor tempAnchor;
+        for (Map<Robot, SortedPathStructure<TimePointPath>> tempMap : temporalPathMap.values()) {
+            for (SortedPathStructure<TimePointPath> pathStructure : tempMap.values()) {
+                tempPath = pathStructure.getFirst();
+                tempPath.getAnchorByIndex(timeSlot);
+            }
+        }
+    }
+
+    public static Integer eliminate(Map<Task, Map<Robot, SortedPathStructure<TimePointPath>>> temporalPathMap) {
+        Integer maximumPathLength = getMaximumSpatialPathLength(temporalPathMap);
+        for (int i = 0; i < maximumPathLength; ++i) {
+
+        }
+    }
+
     public static BasicPair<Map<Task, Map<Robot, SortedPathStructure<TimePointPath>>>, Double> getPlanPath(TimeWeightedGraph graph, List<Robot> robotList, Job job) {
         Map<Task, Map<Robot, SortedPathStructure<TimePointPath>>> result;
         job.initialTaskStartTimeAndEndTime();
