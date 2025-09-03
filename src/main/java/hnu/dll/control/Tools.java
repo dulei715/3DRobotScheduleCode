@@ -5,6 +5,7 @@ import hnu.dll.basic_entity.ThreeDLocation;
 import hnu.dll.config.Constant;
 import hnu.dll.entity.*;
 import hnu.dll.structure.*;
+import hnu.dll.structure.basic_structure.Anchor;
 import hnu.dll.structure.basic_structure.BasicPair;
 import hnu.dll.structure.graph.BipartiteGraph;
 import hnu.dll.structure.graph.SimpleGraph;
@@ -255,7 +256,7 @@ public class Tools {
         for (Map<Robot, SortedPathStructure<TimePointPath>> tempMap : temporalPathMap.values()) {
             for (SortedPathStructure<TimePointPath> pathStructure : tempMap.values()) {
                 tempPath = pathStructure.getFirst();
-                tempPath.getAnchorByIndex(timeSlot);
+                tempPath.getAnchorPairByIndex(timeSlot);
             }
         }
     }

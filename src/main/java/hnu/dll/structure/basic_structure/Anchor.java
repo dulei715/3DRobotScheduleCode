@@ -1,4 +1,4 @@
-package hnu.dll.structure;
+package hnu.dll.structure.basic_structure;
 
 import hnu.dll.basic_entity.PlaneLocation;
 import hnu.dll.basic_entity.ThreeDLocation;

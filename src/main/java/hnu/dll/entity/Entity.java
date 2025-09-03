@@ -2,7 +2,7 @@ package hnu.dll.entity;
 
 import java.util.UUID;
 
-public abstract class Entity {
+public abstract class Entity implements Comparable<Entity> {
     protected String id;
     protected String name;
 

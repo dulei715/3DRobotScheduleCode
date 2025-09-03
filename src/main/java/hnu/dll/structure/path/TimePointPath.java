@@ -1,7 +1,7 @@
 package hnu.dll.structure.path;
 
 import hnu.dll.config.Constant;
-import hnu.dll.structure.Anchor;
+import hnu.dll.structure.AnchorEntity;
 import hnu.dll.structure.basic_structure.BasicPair;
 
 import java.util.LinkedList;
@@ -9,10 +9,10 @@ import java.util.LinkedList;
 public class TimePointPath extends Path implements Comparable<TimePointPath>{
 
     // 第一个是startTime所在位置，每个相邻元素之间间隔TimeUnit大小
-    private LinkedList<Anchor> timeStreamAnchorList;
+    private LinkedList<AnchorEntity> timeStreamAnchorList;
     // todo: add entity
 
-    private TimePointPath(LinkedList<Anchor> timeStreamAnchorList) {
+    private TimePointPath(LinkedList<AnchorEntity> timeStreamAnchorList) {
         this.timeStreamAnchorList = timeStreamAnchorList;
     }
 
@@ -20,7 +20,7 @@ public class TimePointPath extends Path implements Comparable<TimePointPath>{
         return this.timeStreamAnchorList.size();
     }
 
-    public Anchor getAnchorByIndex(Integer index) {
+    public AnchorEntity getAnchorPairByIndex(Integer index) {
         return this.timeStreamAnchorList.get(index);
     }
 
@@ -30,26 +30,26 @@ public class TimePointPath extends Path implements Comparable<TimePointPath>{
      * @return
      */
     public static TimePointPath getTimePointPathByAnchorPointPath(AnchorPointPath anchorPointPath) {
-        LinkedList<Anchor> timeStreamAnchorList = new LinkedList<>();
-        Anchor beforeAnchor = anchorPointPath.getStartAnchor(), nextAnchor;
-        timeStreamAnchorList.add(beforeAnchor);
+        LinkedList<AnchorEntity> timeStreamAnchorList = new LinkedList<>();
+        AnchorEntity beforeAnchorEntity = anchorPointPath.getStartAnchorPair(), nextAnchor;
+        timeStreamAnchorList.add(beforeAnchorEntity);
         Integer edgeTimeLength;
-        for (BasicPair<Double, Anchor> segment : anchorPointPath.getInternalDataList()) {
+        for (BasicPair<Double, AnchorEntity> segment : anchorPointPath.getInternalDataList()) {
             // 将边长展成时序长度
             edgeTimeLength = (int) Math.ceil(segment.getKey() / Constant.TimeUnit);
             for (int i = 0; i < edgeTimeLength - 1; ++i) {
-                timeStreamAnchorList.add(beforeAnchor);
+                timeStreamAnchorList.add(beforeAnchorEntity);
             }
             nextAnchor = segment.getValue();
             timeStreamAnchorList.add(nextAnchor);
-            beforeAnchor = nextAnchor;
+            beforeAnchorEntity = nextAnchor;
         }
         return new TimePointPath(timeStreamAnchorList);
     }
 
-    public void insertAnchor(Anchor anchor, Integer timeIndex, Integer timeSlotLength) {
+    public void insertAnchorEntity(AnchorEntity anchorEntity, Integer timeIndex, Integer timeSlotLength) {
         for (int i = 0; i < timeSlotLength; ++i) {
-            this.timeStreamAnchorList.add(timeIndex, anchor);
+            this.timeStreamAnchorList.add(timeIndex, anchorEntity);
         }
     }
 
@@ -61,11 +61,11 @@ public class TimePointPath extends Path implements Comparable<TimePointPath>{
         if (cmp != 0) {
             return cmp;
         }
-        Anchor thisAnchor, thatAnchor;
+        AnchorEntity thisAnchorEntity, thatAnchorEntity;
         for (int i = 0; i < thisLength; ++i) {
-            thisAnchor = this.timeStreamAnchorList.get(i);
-            thatAnchor = path.timeStreamAnchorList.get(i);
-            cmp = thisAnchor.compareTo(thatAnchor);
+            thisAnchorEntity = this.timeStreamAnchorList.get(i);
+            thatAnchorEntity = path.timeStreamAnchorList.get(i);
+            cmp = thisAnchorEntity.compareTo(thatAnchorEntity);
             if (cmp != 0) {
                 return cmp;
             }
