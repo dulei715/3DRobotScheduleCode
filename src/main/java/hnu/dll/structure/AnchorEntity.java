@@ -29,11 +29,10 @@ public class AnchorEntity implements Comparable<AnchorEntity>{
     }
 
     @Override
+    /**
+     * 只比较Anchor
+     */
     public int compareTo(AnchorEntity that) {
-        int firstRes = this.anchor.compareTo(that.anchor);
-        if (firstRes != 0) {
-            return firstRes;
-        }
-        return this.entity.compareTo(that.entity);
+        return this.anchor.compareTo(that.anchor);
     }
 }

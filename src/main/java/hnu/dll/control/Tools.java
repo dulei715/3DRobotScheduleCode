@@ -252,20 +252,45 @@ public class Tools {
     private static Map<Entity, Set<SortedPathStructure<TimePointPath>>> getConflictMap(Map<Task, Map<Robot, SortedPathStructure<TimePointPath>>> temporalPathMap, Integer timeSlot) {
         Map<Entity, Set<SortedPathStructure<TimePointPath>>> result = new HashMap<>();
         TimePointPath tempPath;
-        Anchor tempAnchor;
+        AnchorEntity tempAnchorEntity;
+        Entity tempEntity;
+        Set<SortedPathStructure<TimePointPath>> tempSet;
+        Map.Entry<Entity, Set<SortedPathStructure<TimePointPath>>> next;
         for (Map<Robot, SortedPathStructure<TimePointPath>> tempMap : temporalPathMap.values()) {
             for (SortedPathStructure<TimePointPath> pathStructure : tempMap.values()) {
                 tempPath = pathStructure.getFirst();
-                tempPath.getAnchorPairByIndex(timeSlot);
+                tempAnchorEntity = tempPath.getAnchorEntityByIndex(timeSlot);
+                tempEntity = tempAnchorEntity.getEntity();
+                tempSet = result.getOrDefault(tempEntity, new HashSet<>());
+                tempSet.add(pathStructure);
             }
         }
+        Iterator<Map.Entry<Entity, Set<SortedPathStructure<TimePointPath>>>> iterator = result.entrySet().iterator();
+        // 移除只含一个元素的集合，表示不冲突
+        while (iterator.hasNext()) {
+            next = iterator.next();
+            if (next.getValue().size() > 1) {
+                iterator.remove();
+            }
+        }
+        return result;
     }
 
     public static Integer eliminate(Map<Task, Map<Robot, SortedPathStructure<TimePointPath>>> temporalPathMap) {
         Integer maximumPathLength = getMaximumSpatialPathLength(temporalPathMap);
+        Map<Entity, Set<SortedPathStructure<TimePointPath>>> conflictMap;
+        Entity tempEntity;
+        Set<SortedPathStructure<TimePointPath>> tempPathStructureSet;
+        Boolean flag = false;
         for (int i = 0; i < maximumPathLength; ++i) {
-
+            conflictMap = getConflictMap(temporalPathMap, i);
+            for (Map.Entry<Entity, Set<SortedPathStructure<TimePointPath>>> conflictEntry : conflictMap.entrySet()) {
+                tempEntity = conflictEntry.getKey();
+                tempPathStructureSet = conflictEntry.getValue();
+                // todo:
+            }
         }
+
     }
 
     public static BasicPair<Map<Task, Map<Robot, SortedPathStructure<TimePointPath>>>, Double> getPlanPath(TimeWeightedGraph graph, List<Robot> robotList, Job job) {
@@ -284,7 +309,7 @@ public class Tools {
         TimePointPath tempTimePointPath;
         result = toTimePointSortedPath(topKPathMap);
         
-        return result;
+        return null;
     }
 
 }

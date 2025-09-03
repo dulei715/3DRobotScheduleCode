@@ -2,6 +2,9 @@ import hnu.dll.entity.Entity;
 import hnu.dll.entity.Robot;
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.UUID;
 
 public class BasicTest {
@@ -31,5 +34,22 @@ public class BasicTest {
                 0.5, 0.4, 10D);
         String name = entity.getClass().getName();
         System.out.println(name);
+    }
+
+    @Test
+    public void fun4() {
+        Map<String, Integer> map = new HashMap<>();
+        map.put("name", 1);
+        map.put("age", 30);
+        map.put("zipcode", 410082);
+        System.out.println(map);
+        Iterator<Map.Entry<String, Integer>> iterator = map.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, Integer> next = iterator.next();
+            if (next.getValue().equals(30)) {
+                iterator.remove();
+            }
+        }
+        System.out.println(map);
     }
 }

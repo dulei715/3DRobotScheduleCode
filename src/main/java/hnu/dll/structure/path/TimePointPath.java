@@ -20,7 +20,7 @@ public class TimePointPath extends Path implements Comparable<TimePointPath>{
         return this.timeStreamAnchorList.size();
     }
 
-    public AnchorEntity getAnchorPairByIndex(Integer index) {
+    public AnchorEntity getAnchorEntityByIndex(Integer index) {
         return this.timeStreamAnchorList.get(index);
     }
 
