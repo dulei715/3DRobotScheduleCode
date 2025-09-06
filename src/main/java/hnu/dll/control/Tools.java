@@ -9,6 +9,8 @@ import hnu.dll.structure.basic_structure.Anchor;
 import hnu.dll.structure.basic_structure.BasicPair;
 import hnu.dll.structure.graph.BipartiteGraph;
 import hnu.dll.structure.graph.SimpleGraph;
+import hnu.dll.structure.match.Match;
+import hnu.dll.structure.match.MatchElement;
 import hnu.dll.structure.path.AnchorPointPath;
 import hnu.dll.structure.path.TimePointPath;
 
@@ -150,10 +152,10 @@ public class Tools {
         return bipartiteGraph;
     }
 
-    public static Match<Task, Robot> getMatchByKuhnMunkres(BipartiteGraph<Task, Robot, Double> graph) {
-        Match<Task, Robot> match = new Match();
+    public static List<BasicPair<Task, Robot>> getMatchByKuhnMunkres(BipartiteGraph<Task, Robot, Double> graph) {
+        List<BasicPair<Task, Robot>> matchList = new ArrayList<>();
         // todo: return a match by Kuhn Munkres algorithm
-        return match;
+        return matchList;
     }
 
     public static SortedPathStructure<AnchorPointPath> topKPathTime(TimeWeightedGraph graph, ThreeDLocation startLocation, ThreeDLocation endLocation, Integer topKSize) {
@@ -170,12 +172,15 @@ public class Tools {
         return result;
     }
 
-    public static BasicPair<Match<Task, Robot>, Map<Task, Map<Robot, SortedPathStructure<AnchorPointPath>>>> taskAssignment(TimeWeightedGraph graph, List<Task> taskList, List<Robot> robotList, Integer topKSize) {
+    public static Map<BasicPair<Task, Robot>,SortedPathStructure<AnchorPointPath>> taskAssignment(TimeWeightedGraph graph, List<Task> taskList, List<Robot> robotList, Integer topKSize) {
         ThreeDLocation startLocation, innerLocation, endLocation;
+        Map<BasicPair<Task, Robot>, SortedPathStructure<AnchorPointPath>> result = new HashMap<>();
         SortedPathStructure<AnchorPointPath> firstSegmentSortedPaths, lastSegmentSortedPath;
         AnchorPointPath newPath;
+        Task tempTask;
+        Robot tempRobot;
         Map<Robot, SortedPathStructure<AnchorPointPath>> tempMap;
-        Double firstTimeCost, lastTimeCost, fetchTaskTimeCost, newTimeCost, deliveryTaskTimeCost;
+        Double fetchTaskTimeCost, deliveryTaskTimeCost;
         SortedPathStructure<AnchorPointPath> tempStructure;
         Map<Task, Map<Robot, SortedPathStructure<AnchorPointPath>>> topKMap = new HashMap<>();
         for (Task task : taskList) {
@@ -205,67 +210,64 @@ public class Tools {
             topKMap.put(task, tempMap);
         }
         BipartiteGraph<Task, Robot, Double> bipartiteGraph = extractTopOneToConstructBipartiteGraph(topKMap);
-        Match<Task, Robot> match = getMatchByKuhnMunkres(bipartiteGraph);
-        return new BasicPair<>(match, topKMap);
+        List<BasicPair<Task, Robot>> matchList = getMatchByKuhnMunkres(bipartiteGraph);
+        for (BasicPair<Task, Robot> pair : matchList) {
+            tempTask = pair.getKey();
+            tempRobot = pair.getValue();
+            tempStructure = topKMap.get(tempTask).get(tempRobot);
+            result.put(pair, tempStructure);
+        }
+        return result;
     }
 
-    protected static Map<Task, Map<Robot, SortedPathStructure<TimePointPath>>> toTimePointSortedPath(Map<Task, Map<Robot, SortedPathStructure<AnchorPointPath>>> topKPathMap) {
-        Map<Task, Map<Robot, SortedPathStructure<TimePointPath>>> result = new HashMap<>();
+    protected static Map<BasicPair<Task, Robot>, SortedPathStructure<TimePointPath>> toTimePointSortedPath(Map<BasicPair<Task, Robot>, SortedPathStructure<AnchorPointPath>> topKPathMap) {
+        Map<BasicPair<Task, Robot>, SortedPathStructure<TimePointPath>> result = new HashMap<>();
         Robot tempRobot;
         TimePointPath tempTimePointPath;
+        BasicPair<Task, Robot> tempPair;
         Task tempTask;
         Map<Robot, SortedPathStructure<TimePointPath>> tempTimeRobotMap;
         Map<Robot, SortedPathStructure<AnchorPointPath>> tempAnchorRobotMap;
         SortedPathStructure<AnchorPointPath> tempAnchorPathStructure;
         SortedPathStructure<TimePointPath> tempTimePathStructure;
-        for (Map.Entry<Task, Map<Robot, SortedPathStructure<AnchorPointPath>>> taskMapEntry : topKPathMap.entrySet()) {
-            tempTask = taskMapEntry.getKey();
-            tempAnchorRobotMap = taskMapEntry.getValue();
-            tempTimeRobotMap = new HashMap<>();
-            for (Map.Entry<Robot, SortedPathStructure<AnchorPointPath>> entry : tempAnchorRobotMap.entrySet()) {
-                tempRobot = entry.getKey();
-                tempAnchorPathStructure = entry.getValue();
-                tempTimePathStructure = new SortedPathStructure<>();
-                for (AnchorPointPath tempAnchorPath : tempAnchorPathStructure.getSortedPaths()) {
-                    tempTimePointPath = TimePointPath.getTimePointPathByAnchorPointPath(tempAnchorPath);
-                    tempTimePathStructure.addPath(tempTimePointPath);
-                }
-                tempTimeRobotMap.put(tempRobot, tempTimePathStructure);
+        for (Map.Entry<BasicPair<Task, Robot>, SortedPathStructure<AnchorPointPath>> pairMapEntry : topKPathMap.entrySet()) {
+            tempPair = pairMapEntry.getKey();
+            tempAnchorPathStructure = pairMapEntry.getValue();
+            tempTimePathStructure = new SortedPathStructure<>();
+            for (AnchorPointPath tempAnchorPath : tempAnchorPathStructure.getSortedPaths()) {
+                tempTimePointPath = TimePointPath.getTimePointPathByAnchorPointPath(tempAnchorPath);
+                tempTimePathStructure.addPath(tempTimePointPath);
             }
-            result.put(tempTask, tempTimeRobotMap);
+            result.put(tempPair, tempTimePathStructure);
         }
         return result;
     }
 
-    private static Integer getMaximumSpatialPathLength(Map<Task, Map<Robot, SortedPathStructure<TimePointPath>>> temporalPathMap) {
+    private static Integer getMaximumSpatialPathLength(Collection<SortedPathStructure<TimePointPath>> temporalPathSet) {
         Integer pathLength = 0;
         TimePointPath tempPath;
-        for (Map<Robot, SortedPathStructure<TimePointPath>> tempMap : temporalPathMap.values()) {
-            for (SortedPathStructure<TimePointPath> pathStructure : tempMap.values()) {
-                tempPath = pathStructure.getFirst();
-                pathLength = Math.max(pathLength, tempPath.getTimeLength());
-            }
+        for (SortedPathStructure<TimePointPath> pathStructure : temporalPathSet) {
+            tempPath = pathStructure.getFirst();
+            pathLength = Math.max(pathLength, tempPath.getTimeLength());
         }
         return pathLength;
     }
 
-    private static Map<Entity, Set<SortedPathStructure<TimePointPath>>> getConflictMap(Map<Task, Map<Robot, SortedPathStructure<TimePointPath>>> temporalPathMap, Integer timeSlot) {
-        Map<Entity, Set<SortedPathStructure<TimePointPath>>> result = new HashMap<>();
+    private static Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> getConflictMap(Collection<SortedPathStructure<TimePointPath>> temporalPathSet, Integer timeSlot) {
+        Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> result = new HashMap<>();
         TimePointPath tempPath;
         AnchorEntity tempAnchorEntity;
         Entity tempEntity;
         Set<SortedPathStructure<TimePointPath>> tempSet;
-        Map.Entry<Entity, Set<SortedPathStructure<TimePointPath>>> next;
-        for (Map<Robot, SortedPathStructure<TimePointPath>> tempMap : temporalPathMap.values()) {
-            for (SortedPathStructure<TimePointPath> pathStructure : tempMap.values()) {
-                tempPath = pathStructure.getFirst();
-                tempAnchorEntity = tempPath.getAnchorEntityByIndex(timeSlot);
-                tempEntity = tempAnchorEntity.getEntity();
-                tempSet = result.getOrDefault(tempEntity, new HashSet<>());
-                tempSet.add(pathStructure);
-            }
+        Map.Entry<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> next;
+        for (SortedPathStructure<TimePointPath> pathStructure : temporalPathSet) {
+            tempPath = pathStructure.getFirst();
+            tempAnchorEntity = tempPath.getAnchorEntityByIndex(timeSlot);
+//                tempEntity = tempAnchorEntity.getEntity();
+            tempSet = result.getOrDefault(tempAnchorEntity, new HashSet<>());
+            tempSet.add(pathStructure);
         }
-        Iterator<Map.Entry<Entity, Set<SortedPathStructure<TimePointPath>>>> iterator = result.entrySet().iterator();
+        Iterator<Map.Entry<AnchorEntity, Set<SortedPathStructure<TimePointPath>>>> iterator = result.entrySet().iterator();
         // 移除只含一个元素的集合，表示不冲突
         while (iterator.hasNext()) {
             next = iterator.next();
@@ -276,40 +278,190 @@ public class Tools {
         return result;
     }
 
-    public static Integer eliminate(Map<Task, Map<Robot, SortedPathStructure<TimePointPath>>> temporalPathMap) {
-        Integer maximumPathLength = getMaximumSpatialPathLength(temporalPathMap);
-        Map<Entity, Set<SortedPathStructure<TimePointPath>>> conflictMap;
+    /**
+     * 获取所有冲突中的胜利匹配（路线最长）
+     * @param conflictMap
+     * @return
+     */
+    public static BasicPair<Map<AnchorEntity, SortedPathStructure<TimePointPath>>, Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>>> getWinnerAndFailureMatch(Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> conflictMap) {
+        AnchorEntity tempAnchorEntity;
+        Set<SortedPathStructure<TimePointPath>> tempPathStructureSet, failurePathStructureSet;
+        SortedPathStructure<TimePointPath> winnerPath = null;
+        Integer tempLength, maxLength;
+        Map<AnchorEntity, SortedPathStructure<TimePointPath>> winnerMap = new HashMap<>();
+        Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> failureMap = new HashMap<>();
+        for (Map.Entry<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> anchorEntitySetEntry : conflictMap.entrySet()) {
+            maxLength = 0;
+            tempAnchorEntity = anchorEntitySetEntry.getKey();
+            tempPathStructureSet = anchorEntitySetEntry.getValue();
+            for (SortedPathStructure<TimePointPath> tempPathStructure : tempPathStructureSet) {
+                tempLength = tempPathStructure.getFirst().getTimeLength();
+                if (tempLength > maxLength) {
+                    maxLength = tempLength;
+                    winnerPath = tempPathStructure;
+                }
+            }
+            winnerMap.put(tempAnchorEntity, winnerPath);
+            failurePathStructureSet = new HashSet<>();
+            failurePathStructureSet.addAll(tempPathStructureSet);
+            failurePathStructureSet.remove(winnerPath);
+            failureMap.put(tempAnchorEntity, failurePathStructureSet);
+        }
+        return new BasicPair<>(winnerMap, failureMap);
+    }
+
+    /**
+     * 计算被当前path占用给定的entity的剩余时间数,设计保证了该值不小于0
+     * @param timePointPath
+     * @param entity
+     * @param startIndex
+     * @return
+     */
+    public static BasicPair<Integer, Integer> getRemainingOccupiedTimeSlotsAndStopLayer(TimePointPath timePointPath, Entity entity, Integer startIndex) {
+        Integer pathLength = timePointPath.getTimeLength();
+        Entity tempEntity = null;
+        Integer remainTimeSlots;
+        Integer layer;
+        int endStrictIndex;
+        for (endStrictIndex = startIndex; endStrictIndex < pathLength; ++endStrictIndex) {
+            tempEntity = timePointPath.getAnchorEntityByIndex(endStrictIndex).getEntity();
+            if (!tempEntity.equals(entity)) {
+                break;
+            }
+        }
+        remainTimeSlots = endStrictIndex - startIndex;
+        Anchor anchor;
+        if (tempEntity instanceof Anchor) {
+            anchor = (Anchor) tempEntity;
+        } else {
+            // 这里假设任意电梯的出口和任意楼梯的出口都不相连，并且任意路线都不以电梯或楼梯为结束点
+            // 走到这一步说明结束占用该位置的下一个位置是电梯或者楼梯，需要重新获取最后占用的位置
+            // 并且只有冲突的事anchor才能走到这一步
+            anchor = (Anchor) entity;
+        }
+        layer = BasicFunctions.getLayer(anchor.getLocation());
+        return new BasicPair<>(remainTimeSlots, layer);
+    }
+
+
+    public static Map<SortedPathStructure<TimePointPath>, Integer> getWaitingTimeSet(Map<AnchorEntity, SortedPathStructure<TimePointPath>> winnerPathMap, Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> failurePathSetMap, Integer currentTimeIndex) {
+        Map<SortedPathStructure<TimePointPath>, Integer> result = new HashMap<>();
+        AnchorEntity tempAnchorEntity;
+        Anchor tempAnchor;
+        Entity tempEntity;
+        SortedPathStructure<TimePointPath> winnerSortedPathStructure;
+        Set<SortedPathStructure<TimePointPath>> failurePathSet;
+        TimePointPath winnerTimePointPath;
+        BasicPair<Integer, Integer> timeSlotsLayerPair;
+        Integer remainOccupiedTimeSlots;
+        Integer tempWaitedTimeSlots;
+        Integer tempLastLayer, targetLayer;
+        for (Map.Entry<AnchorEntity, SortedPathStructure<TimePointPath>> winnerEntry : winnerPathMap.entrySet()) {
+            tempAnchorEntity = winnerEntry.getKey();
+            tempEntity = tempAnchorEntity.getEntity();
+            winnerSortedPathStructure = winnerEntry.getValue();
+            winnerTimePointPath = winnerSortedPathStructure.getFirst();
+            timeSlotsLayerPair = getRemainingOccupiedTimeSlotsAndStopLayer(winnerTimePointPath, tempEntity, currentTimeIndex);
+            remainOccupiedTimeSlots = timeSlotsLayerPair.getKey();
+            tempAnchor = tempAnchorEntity.getAnchor();
+            if (tempEntity instanceof Elevator) {
+                Elevator elevator = (Elevator) tempEntity;
+                tempLastLayer = timeSlotsLayerPair.getValue();
+                targetLayer = BasicFunctions.getLayer(tempAnchor.getLocation());
+                // 计算电梯被占用的等待时间
+                tempWaitedTimeSlots = remainOccupiedTimeSlots + BasicFunctions.getElevatorRunningTimeSlots(tempLastLayer, targetLayer, elevator.getVelocity());
+            } else {
+                // 计算当前楼梯或锚点被占用的等待时间
+                tempWaitedTimeSlots = remainOccupiedTimeSlots;
+            }
+            failurePathSet = failurePathSetMap.get(tempAnchorEntity);
+            for (SortedPathStructure<TimePointPath> pathStructure : failurePathSet) {
+                result.put(pathStructure, tempWaitedTimeSlots);
+            }
+        }
+        return result;
+    }
+
+    public static boolean delayAndUpdate(Map<SortedPathStructure<TimePointPath>, Integer> timeWaitedMap, Integer startTime) {
+        SortedPathStructure<TimePointPath> tempStructure;
+        TimePointPath tempPath;
+        Integer tempDelaySlots;
+        AnchorEntity tempLastAnchorEntity;
+        boolean flag = false;
+        for (Map.Entry<SortedPathStructure<TimePointPath>, Integer> entry : timeWaitedMap.entrySet()) {
+            tempStructure = entry.getKey();
+            tempPath = tempStructure.getFirst();
+            tempDelaySlots = entry.getValue();
+            // 假设一开始的0时刻没有冲突
+            tempLastAnchorEntity = tempPath.getAnchorEntityByIndex(startTime - 1);
+            tempPath.insertAnchorEntity(tempLastAnchorEntity, startTime, tempDelaySlots);
+            if (tempPath != tempStructure.getFirst()) {
+                flag = true;
+            }
+        }
+        return flag;
+    }
+
+
+
+    public static Integer eliminate(Map<BasicPair<Task, Robot>, SortedPathStructure<TimePointPath>> temporalPathMap) {
+        Integer maximumPathLength = getMaximumSpatialPathLength(temporalPathMap.values());
+        Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> conflictMap;
+        AnchorEntity tempAnchorEntity;
         Entity tempEntity;
         Set<SortedPathStructure<TimePointPath>> tempPathStructureSet;
         Boolean flag = false;
+        BasicPair<Map<AnchorEntity, SortedPathStructure<TimePointPath>>, Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>>> winFailurePair;
+        Map<AnchorEntity, SortedPathStructure<TimePointPath>> winnerMatch;
+        Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> failureMatch;
+        Map<SortedPathStructure<TimePointPath>, Integer> waitingTimeSet;
         for (int i = 0; i < maximumPathLength; ++i) {
-            conflictMap = getConflictMap(temporalPathMap, i);
-            for (Map.Entry<Entity, Set<SortedPathStructure<TimePointPath>>> conflictEntry : conflictMap.entrySet()) {
-                tempEntity = conflictEntry.getKey();
-                tempPathStructureSet = conflictEntry.getValue();
-                // todo:
+            conflictMap = getConflictMap(temporalPathMap.values(), i);
+            winFailurePair = getWinnerAndFailureMatch(conflictMap);
+            winnerMatch = winFailurePair.getKey();
+            failureMatch = winFailurePair.getValue();
+            waitingTimeSet = getWaitingTimeSet(winnerMatch, failureMatch, i);
+            flag = delayAndUpdate(waitingTimeSet, i);
+            if (!conflictMap.isEmpty()) {
+                maximumPathLength = BasicFunctions.getMaximalTimeSlotLength(waitingTimeSet.keySet());
+            }
+            if (flag) {
+                i = 0;
             }
         }
-
+        return maximumPathLength;
     }
 
-    public static BasicPair<Map<Task, Map<Robot, SortedPathStructure<TimePointPath>>>, Double> getPlanPath(TimeWeightedGraph graph, List<Robot> robotList, Job job) {
-        Map<Task, Map<Robot, SortedPathStructure<TimePointPath>>> result;
+    public static Match getPlanPath(TimeWeightedGraph graph, List<Robot> robotList, Job job) {
+        Map<BasicPair<Task,Robot>, SortedPathStructure<TimePointPath>> result;
         job.initialTaskStartTimeAndEndTime();
         List<Task> taskList = job.getTaskList();
-        BasicPair<Match<Task, Robot>, Map<Task, Map<Robot, SortedPathStructure<AnchorPointPath>>>> matchMapBasicPair = taskAssignment(graph, taskList, robotList, Constant.topKSize);
-        Match<Task, Robot> match = matchMapBasicPair.getKey();
-        Map<Task, Map<Robot, SortedPathStructure<AnchorPointPath>>> topKPathMap = matchMapBasicPair.getValue();
+        Map<BasicPair<Task, Robot>, SortedPathStructure<AnchorPointPath>> matchMapBasicPair = taskAssignment(graph, taskList, robotList, Constant.topKSize);
         Task tempTask;
+        Integer maximalTimeSlotLength;
+        BasicPair<Task, Robot> tempPair;
+        SortedPathStructure<TimePointPath> pathStructure;
+        MatchElement tempMatchElement;
         Map<Robot,SortedPathStructure<AnchorPointPath>> tempAnchorRobotMap;
         Map<Robot,SortedPathStructure<TimePointPath>> tempTimeRobotMap;
         Robot tempRobot;
-        SortedPathStructure<AnchorPointPath> tempAnchorPathStructure;
-        SortedPathStructure<TimePointPath> tempTimePathStructure;
+        AnchorPointPath tempAnchorPointPath;
         TimePointPath tempTimePointPath;
-        result = toTimePointSortedPath(topKPathMap);
+        result = toTimePointSortedPath(matchMapBasicPair);
+        maximalTimeSlotLength = eliminate(result);
+        Match match = new Match();
+
+        for (Map.Entry<BasicPair<Task, Robot>, SortedPathStructure<TimePointPath>> entry : result.entrySet()) {
+            tempPair = entry.getKey();
+            pathStructure = entry.getValue();
+            tempAnchorPointPath = matchMapBasicPair.get(tempPair).getFirst();
+            tempTimePointPath = pathStructure.getFirst();
+            tempMatchElement = new MatchElement(tempPair.getKey(), tempPair.getValue(), tempAnchorPointPath, tempTimePointPath);
+            match.add(tempMatchElement);
+        }
+        match.setMaxCostTimeLength(maximalTimeSlotLength);
         
-        return null;
+        return match;
     }
 
 }
