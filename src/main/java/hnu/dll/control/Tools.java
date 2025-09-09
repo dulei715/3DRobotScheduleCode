@@ -126,11 +126,7 @@ public class Tools {
     }
 
 
-    public static List<AnchorPointPath> getTopKShortestPath(TimeWeightedGraph graph, ThreeDLocation startLocation, ThreeDLocation endLocation, Integer topKSize) {
-        List<AnchorPointPath> result = null;
-        // todo: return top k nearest paths
-        return result;
-    }
+
 
     public static BipartiteGraph<Task, Robot, Double> extractTopOneToConstructBipartiteGraph(Map<Task, Map<Robot, SortedPathStructure<AnchorPointPath>>> topKMap) {
         List<Task> taskList = new ArrayList<>();
@@ -152,16 +148,12 @@ public class Tools {
         return bipartiteGraph;
     }
 
-    public static List<BasicPair<Task, Robot>> getMatchByKuhnMunkres(BipartiteGraph<Task, Robot, Double> graph) {
-        List<BasicPair<Task, Robot>> matchList = new ArrayList<>();
-        // todo: return a match by Kuhn Munkres algorithm
-        return matchList;
-    }
+
 
     public static SortedPathStructure<AnchorPointPath> topKPathTime(TimeWeightedGraph graph, ThreeDLocation startLocation, ThreeDLocation endLocation, Integer topKSize) {
         Double timeCost;
 //        TimeWeightedGraph graph = getTimeWeightedGraph(simpleGraph, robot);
-        List<AnchorPointPath> topKPathList = getTopKShortestPath(graph, startLocation, endLocation, topKSize);
+        List<AnchorPointPath> topKPathList = BasicFunctions.getTopKShortestPath(graph, startLocation, endLocation, topKSize);
 //        List<BasicPair<Path, Double>> resultList = new ArrayList<>();
         SortedPathStructure<AnchorPointPath> result = new SortedPathStructure<>();
         for (AnchorPointPath path : topKPathList) {
@@ -210,7 +202,7 @@ public class Tools {
             topKMap.put(task, tempMap);
         }
         BipartiteGraph<Task, Robot, Double> bipartiteGraph = extractTopOneToConstructBipartiteGraph(topKMap);
-        List<BasicPair<Task, Robot>> matchList = getMatchByKuhnMunkres(bipartiteGraph);
+        List<BasicPair<Task, Robot>> matchList = BasicFunctions.getMatchByKuhnMunkres(bipartiteGraph);
         for (BasicPair<Task, Robot> pair : matchList) {
             tempTask = pair.getKey();
             tempRobot = pair.getValue();

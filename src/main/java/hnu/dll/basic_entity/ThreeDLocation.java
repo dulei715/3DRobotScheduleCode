@@ -3,9 +3,9 @@ package hnu.dll.basic_entity;
 import java.util.Objects;
 
 public class ThreeDLocation implements Comparable<ThreeDLocation> {
-    private Double xIndex;
-    private Double yIndex;
-    private Double zIndex;
+    private final Double xIndex;
+    private final Double yIndex;
+    private final Double zIndex;
 
     public ThreeDLocation(PlaneLocation planeLocation, Double zIndex) {
         this.xIndex = planeLocation.getxIndex();
@@ -25,24 +25,13 @@ public class ThreeDLocation implements Comparable<ThreeDLocation> {
         return xIndex;
     }
 
-    public void setxIndex(Double xIndex) {
-        this.xIndex = xIndex;
-    }
 
     public Double getyIndex() {
         return yIndex;
     }
 
-    public void setyIndex(Double yIndex) {
-        this.yIndex = yIndex;
-    }
-
     public Double getzIndex() {
         return zIndex;
-    }
-
-    public void setzIndex(Double zIndex) {
-        this.zIndex = zIndex;
     }
 
     @Override

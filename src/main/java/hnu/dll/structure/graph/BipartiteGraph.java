@@ -39,7 +39,13 @@ public class BipartiteGraph<U, V, E> {
         this.relationTable.get(partA).put(partB, weight);
     }
 
+    public List<U> getPartAList() { return partAList; }
+    public List<V> getPartBList() { return partBList; }
+
     public E getWeight(U partA, V partB) {
-        return this.relationTable.get(partA).get(partB);
+        Map<V, E> row = this.relationTable.get(partA);
+        return (row == null) ? null : row.get(partB);
     }
+
+
 }
