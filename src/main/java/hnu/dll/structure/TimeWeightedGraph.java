@@ -41,4 +41,8 @@ public class TimeWeightedGraph {
         }
         return all;
     }
+
+    public Map<Anchor, Map<Anchor, Double>> getGraphTable() {
+        return graphTable;
+    }
 }

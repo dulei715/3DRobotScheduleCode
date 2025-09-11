@@ -1,7 +1,6 @@
 package hnu.dll.entity;
 
-import hnu.dll.basic_entity.PlaneLocation;
-import hnu.dll.basic_entity.ThreeDLocation;
+import hnu.dll.basic_entity.location.PlaneLocation;
 
 public class Elevator extends Entity {
 
@@ -55,13 +54,20 @@ public class Elevator extends Entity {
     @Override
     public String toString() {
         return "Elevator{" +
-                "velocity=" + velocity +
-                ", openingOrCloseTimeCost=" + openingOrCloseTimeCost +
-                ", layerSize=" + layerSize +
+                "name='" + name +
                 ", planeLocation=" + planeLocation +
-                ", currentLayer=" + currentLayer +
-                ", id='" + id + '\'' +
-                ", name='" + name + '\'' +
+                ", currentLayer=" + currentLayer + '\'' +
                 '}';
     }
+//    public String toString() {
+//        return "Elevator{" +
+//                "velocity=" + velocity +
+//                ", openingOrCloseTimeCost=" + openingOrCloseTimeCost +
+//                ", layerSize=" + layerSize +
+//                ", planeLocation=" + planeLocation +
+//                ", currentLayer=" + currentLayer +
+//                ", id='" + id + '\'' +
+//                ", name='" + name + '\'' +
+//                '}';
+//    }
 }

@@ -1,7 +1,7 @@
 package hnu.dll.entity;
 
-import hnu.dll.basic_entity.PlaneLocation;
-import hnu.dll.basic_entity.ThreeDLocation;
+import hnu.dll.basic_entity.location.PlaneLocation;
+import hnu.dll.basic_entity.location.ThreeDLocation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,12 +56,21 @@ public class Stair extends Entity {
     @Override
     public String toString() {
         return "Stair{" +
-                "planeLocation=" + planeLocation +
-                ", layerSize=" + layerSize +
+                "name" + name +
+                ", location='" + planeLocation +
                 ", innerNodeList=" + innerNodeList +
                 ", segmentLength=" + segmentLength +
-                ", id='" + id + '\'' +
-                ", name='" + name + '\'' +
+                ", layerSize=" + layerSize + '\'' +
                 '}';
     }
+//    public String toString() {
+//        return "Stair{" +
+//                "planeLocation=" + planeLocation +
+//                ", layerSize=" + layerSize +
+//                ", innerNodeList=" + innerNodeList +
+//                ", segmentLength=" + segmentLength +
+//                ", id='" + id + '\'' +
+//                ", name='" + name + '\'' +
+//                '}';
+//    }
 }

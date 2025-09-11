@@ -1,14 +1,15 @@
 package hnu.dll.entity;
 
-import hnu.dll.basic_entity.ThreeDLocation;
+import hnu.dll.basic_entity.location.ThreeDLocation;
+import hnu.dll.structure.basic_structure.Anchor;
 
 import java.util.Objects;
 
 
-public abstract class Task extends Entity {
+public class Task extends Entity {
 
-    private ThreeDLocation startLocation;
-    private ThreeDLocation endLocation;
+    private Anchor startAnchor;
+    private Anchor endAnchor;
     private Double fetchTime;
     private Double sendOffTime;
     private Double occupyingSpace;
@@ -16,21 +17,21 @@ public abstract class Task extends Entity {
     private Double startTime;
     private Double endTime;
 
-    public Task(String name, ThreeDLocation startLocation, ThreeDLocation endLocation, Double fetchTime, Double sendOffTime, Double occupyingSpace) {
+    public Task(String name, Anchor startAnchor, Anchor endAnchor, Double fetchTime, Double sendOffTime, Double occupyingSpace) {
         super(name);
-        this.startLocation = startLocation;
-        this.endLocation = endLocation;
+        this.startAnchor = startAnchor;
+        this.endAnchor = endAnchor;
         this.fetchTime = fetchTime;
         this.sendOffTime = sendOffTime;
         this.occupyingSpace = occupyingSpace;
     }
 
-    public ThreeDLocation getStartLocation() {
-        return startLocation;
+    public Anchor getStartAnchor() {
+        return startAnchor;
     }
 
-    public ThreeDLocation getEndLocation() {
-        return endLocation;
+    public Anchor getEndAnchor() {
+        return endAnchor;
     }
 
     public Double getFetchTime() {
@@ -66,11 +67,11 @@ public abstract class Task extends Entity {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Task task = (Task) o;
-        return Objects.equals(startLocation, task.startLocation) && Objects.equals(endLocation, task.endLocation) && Objects.equals(fetchTime, task.fetchTime) && Objects.equals(sendOffTime, task.sendOffTime) && Objects.equals(occupyingSpace, task.occupyingSpace);
+        return Objects.equals(startAnchor, task.startAnchor) && Objects.equals(endAnchor, task.endAnchor) && Objects.equals(fetchTime, task.fetchTime) && Objects.equals(sendOffTime, task.sendOffTime) && Objects.equals(occupyingSpace, task.occupyingSpace);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(startLocation, endLocation, fetchTime, sendOffTime, occupyingSpace);
+        return Objects.hash(startAnchor, endAnchor, fetchTime, sendOffTime, occupyingSpace);
     }
 }

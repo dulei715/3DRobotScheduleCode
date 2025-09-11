@@ -1,20 +1,19 @@
 package hnu.dll.control;
 
-import hnu.dll.basic_entity.ThreeDLocation;
+import hnu.dll.basic_entity.location.ThreeDLocation;
 import hnu.dll.config.Constant;
+import hnu.dll.control.topk.YenTopKPaths;
 import hnu.dll.entity.Robot;
 import hnu.dll.entity.Task;
 import hnu.dll.structure.SortedPathStructure;
 import hnu.dll.structure.TimeWeightedGraph;
+import hnu.dll.structure.basic_structure.Anchor;
 import hnu.dll.structure.basic_structure.BasicPair;
 import hnu.dll.structure.graph.BipartiteGraph;
 import hnu.dll.structure.path.AnchorPointPath;
 import hnu.dll.structure.path.TimePointPath;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class BasicFunctions {
 
@@ -46,14 +45,39 @@ public class BasicFunctions {
      * 结果为无环路径（loopless）；
      * 若你的图要“无向”，请对每条边 addElement(u,v,w) 同时再 addElement(v,u,w)。
      * @param graph
-     * @param startLocation
-     * @param endLocation
+     * @param startAnchor
+     * @param endAnchor
      * @param topKSize
      * @return
      */
-    public static List<AnchorPointPath> getTopKShortestPath(TimeWeightedGraph graph, ThreeDLocation startLocation, ThreeDLocation endLocation, Integer topKSize) {
-        List<AnchorPointPath> result = null;
-        // todo: return top k nearest paths
+    public static List<AnchorPointPath> getTopKShortestPath(TimeWeightedGraph graph, Anchor startAnchor, Anchor endAnchor, Integer topKSize) {
+        return YenTopKPaths.kShortestAnchorPointPaths(graph, startAnchor, endAnchor, topKSize);
+    }
+
+    public static BipartiteGraph<Task, Robot, Double> extractTopOneToConstructBipartiteGraph(Map<Task, Map<Robot, SortedPathStructure<AnchorPointPath>>> topKMap) {
+        Task tempTask;
+        Robot tempRobot;
+        AnchorPointPath tempPath;
+        Map<Robot, SortedPathStructure<AnchorPointPath>> tempMap;
+        BipartiteGraph<Task, Robot, Double> bipartiteGraph = new BipartiteGraph<>();
+        for (Map.Entry<Task, Map<Robot, SortedPathStructure<AnchorPointPath>>> taskMapEntry : topKMap.entrySet()) {
+            tempTask = taskMapEntry.getKey();
+            tempMap = taskMapEntry.getValue();
+            for (Map.Entry<Robot, SortedPathStructure<AnchorPointPath>> entry : tempMap.entrySet()) {
+                tempRobot = entry.getKey();
+                tempPath = entry.getValue().getFirst();
+                bipartiteGraph.addValue(tempTask, tempRobot, tempPath.getWeightedSum());
+            }
+        }
+        return bipartiteGraph;
+    }
+
+    public static SortedPathStructure<AnchorPointPath> topKPathTime(TimeWeightedGraph graph, Anchor startAnchor, Anchor endAnchor, Integer topKSize) {
+        List<AnchorPointPath> topKPathList = BasicFunctions.getTopKShortestPath(graph, startAnchor, endAnchor, topKSize);
+        SortedPathStructure<AnchorPointPath> result = new SortedPathStructure<>();
+        for (AnchorPointPath path : topKPathList) {
+            result.addPath(path);
+        }
         return result;
     }
 

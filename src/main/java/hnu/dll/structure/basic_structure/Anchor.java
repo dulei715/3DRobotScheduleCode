@@ -1,7 +1,7 @@
 package hnu.dll.structure.basic_structure;
 
-import hnu.dll.basic_entity.PlaneLocation;
-import hnu.dll.basic_entity.ThreeDLocation;
+import hnu.dll.basic_entity.location.PlaneLocation;
+import hnu.dll.basic_entity.location.ThreeDLocation;
 import hnu.dll.entity.Entity;
 
 import java.util.Objects;
@@ -51,9 +51,15 @@ public class Anchor extends Entity implements Comparable<Anchor> {
     @Override
     public String toString() {
         return "Anchor{" +
-                "threeDLocation=" + threeDLocation +
-                ", id='" + id + '\'' +
-                ", name='" + name + '\'' +
+                "name='" + name +
+                ",location=" + threeDLocation + '\'' +
                 '}';
     }
+//    public String toString() {
+//        return "Anchor{" +
+//                "threeDLocation=" + threeDLocation +
+//                ", id='" + id + '\'' +
+//                ", name='" + name + '\'' +
+//                '}';
+//    }
 }

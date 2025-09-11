@@ -1,8 +1,8 @@
-package hnu.dll.basic_entity;
+package hnu.dll.basic_entity.location;
 
 import java.util.Objects;
 
-public class PlaneLocation {
+public class PlaneLocation extends Location {
     private Double xIndex;
     private Double yIndex;
 
@@ -48,9 +48,18 @@ public class PlaneLocation {
 
     @Override
     public String toString() {
-        return "PlaneLocation{" +
-                "xIndex=" + xIndex +
-                ", yIndex=" + yIndex +
-                '}';
+        return "(" + xIndex + ", " + yIndex + ")";
+    }
+//    @Override
+//    public String toString() {
+//        return "PlaneLocation{" +
+//                "xIndex=" + xIndex +
+//                ", yIndex=" + yIndex +
+//                '}';
+//    }
+
+    @Override
+    public Double[] getIndexArray() {
+        return new Double[]{this.xIndex, this.yIndex};
     }
 }

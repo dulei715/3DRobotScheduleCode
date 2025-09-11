@@ -1,8 +1,8 @@
-package hnu.dll.basic_entity;
+package hnu.dll.basic_entity.location;
 
 import java.util.Objects;
 
-public class ThreeDLocation implements Comparable<ThreeDLocation> {
+public class ThreeDLocation extends Location implements Comparable<ThreeDLocation> {
     private final Double xIndex;
     private final Double yIndex;
     private final Double zIndex;
@@ -53,13 +53,17 @@ public class ThreeDLocation implements Comparable<ThreeDLocation> {
         return Objects.hash(xIndex, yIndex, zIndex);
     }
 
+//    @Override
+//    public String toString() {
+//        return "Location{" +
+//                "xIndex=" + xIndex +
+//                ", yIndex=" + yIndex +
+//                ", zIndex=" + zIndex +
+//                '}';
+//    }
     @Override
     public String toString() {
-        return "Location{" +
-                "xIndex=" + xIndex +
-                ", yIndex=" + yIndex +
-                ", zIndex=" + zIndex +
-                '}';
+        return "(" + xIndex + ", " + yIndex + ", " + zIndex + ")";
     }
 
     @Override
@@ -73,5 +77,10 @@ public class ThreeDLocation implements Comparable<ThreeDLocation> {
             return differ;
         }
         return this.zIndex.compareTo(location.zIndex);
+    }
+
+    @Override
+    public Double[] getIndexArray() {
+        return new Double[]{this.xIndex, this.yIndex, this.zIndex};
     }
 }

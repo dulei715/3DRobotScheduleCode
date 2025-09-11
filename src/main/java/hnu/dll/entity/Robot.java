@@ -1,8 +1,9 @@
 package hnu.dll.entity;
 
-import hnu.dll.basic_entity.ThreeDLocation;
+import hnu.dll.basic_entity.location.ThreeDLocation;
+import hnu.dll.structure.basic_structure.Anchor;
 
-import java.util.Objects;
+import java.util.*;
 
 
 public class Robot extends Entity {
@@ -16,7 +17,7 @@ public class Robot extends Entity {
     private Double stairVelocity;
     private Double capacity;
 
-    private ThreeDLocation threeDLocation;
+    private Anchor anchorLocation;
 
     public Robot(String name, String type, Double flatGroundVelocity, Double stairVelocity, Double capacity) {
         super(name);
@@ -51,12 +52,34 @@ public class Robot extends Entity {
         this.capacity = capacity;
     }
 
-    public ThreeDLocation getLocation() {
-        return threeDLocation;
+    public Anchor getLocation() {
+        return anchorLocation;
     }
 
-    public void setLocation(ThreeDLocation threeDLocation) {
-        this.threeDLocation = threeDLocation;
+    public void setLocation(Anchor anchor) {
+        this.anchorLocation = anchor;
+    }
+
+    public static List<Robot> getRobotList(Map<String, List<Robot>> robotMapList) {
+        List<Robot> result = new ArrayList<>();
+        Collection<List<Robot>> values = robotMapList.values();
+        for (List<Robot> list : values) {
+            result.addAll(list);
+        }
+        return result;
+    }
+
+    public static Map<String, List<Robot>> getClassifiedRobotMap(List<Robot> robotList) {
+        String type;
+        Map<String, List<Robot>> result = new HashMap<>();
+        List<Robot> tempList;
+        for (Robot robot : robotList) {
+            type = robot.getType();
+            tempList = result.getOrDefault(type, new ArrayList<>());
+            tempList.add(robot);
+            result.put(type, tempList);
+        }
+        return result;
     }
 
 
@@ -69,11 +92,11 @@ public class Robot extends Entity {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Robot robot = (Robot) o;
-        return Objects.equals(type, robot.type) && Objects.equals(flatGroundVelocity, robot.flatGroundVelocity) && Objects.equals(stairVelocity, robot.stairVelocity) && Objects.equals(capacity, robot.capacity) && Objects.equals(threeDLocation, robot.threeDLocation);
+        return Objects.equals(type, robot.type) && Objects.equals(flatGroundVelocity, robot.flatGroundVelocity) && Objects.equals(stairVelocity, robot.stairVelocity) && Objects.equals(capacity, robot.capacity) && Objects.equals(anchorLocation, robot.anchorLocation);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(type, flatGroundVelocity, stairVelocity, capacity, threeDLocation);
+        return Objects.hash(type, flatGroundVelocity, stairVelocity, capacity, anchorLocation);
     }
 }

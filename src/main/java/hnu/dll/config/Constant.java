@@ -5,7 +5,7 @@ import java.util.Objects;
 public class Constant {
 
     /**
-     * 时间以秒为单位
+     * 时间以秒为单位, 长度以米为单位
      */
 
     public static String resourcePath = Objects.requireNonNull(
@@ -33,5 +33,6 @@ public class Constant {
     public static final Double PersonRobotStairVelocity = 0.1;
     public static final Double PersonRobotCapacity = 5D;
 
-    // for Job
+    // for Stair
+    public static final Double stairAngle = Math.PI / 6;  // 设置楼梯仰角30度
 }

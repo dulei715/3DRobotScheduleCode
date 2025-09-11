@@ -1,6 +1,6 @@
 package hnu.dll.structure.path;
 
-import hnu.dll.basic_entity.ThreeDLocation;
+import hnu.dll.basic_entity.location.ThreeDLocation;
 import hnu.dll.entity.Entity;
 import hnu.dll.structure.basic_structure.BasicPair;
 
