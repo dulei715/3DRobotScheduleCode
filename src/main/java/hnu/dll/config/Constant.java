@@ -4,6 +4,10 @@ import java.util.Objects;
 
 public class Constant {
 
+    /**
+     * 时间以秒为单位
+     */
+
     public static String resourcePath = Objects.requireNonNull(
             Thread.currentThread()
                     .getContextClassLoader()
@@ -17,6 +21,17 @@ public class Constant {
     public static final Integer topKSize = 3;
 
     // for Elevator
-    public static final Double ElevatorAverageVelocity = 0.5;
-    public static final Double OpenOrCloseDoorTimeCost = 1.0/12;
+    public static final Double ElevatorAverageVelocity = 1D;
+    public static final Double OpenOrCloseDoorTimeCost = 5D;
+
+    // for Robot
+    public static final Double DogRobotPlaneVelocity = 0.5;
+    public static final Double DogRobotStairVelocity = 0.3;
+    public static final Double DogRobotCapacity = 10D;
+
+    public static final Double PersonRobotPlaneVelocity = 0.3;
+    public static final Double PersonRobotStairVelocity = 0.1;
+    public static final Double PersonRobotCapacity = 5D;
+
+    // for Job
 }

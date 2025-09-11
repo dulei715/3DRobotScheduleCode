@@ -7,6 +7,9 @@ import java.util.Objects;
 
 public class Robot extends Entity {
 
+    public static final String DogRobotType = "0";
+    public static final String PersonRobotType = "1";
+
     private String type;
 
     private Double flatGroundVelocity;

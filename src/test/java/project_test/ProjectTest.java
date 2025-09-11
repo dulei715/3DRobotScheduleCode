@@ -7,9 +7,7 @@ import cn.edu.dll.io.read.PropertiesRead;
 import hnu.dll.basic_entity.PlaneLocation;
 import hnu.dll.basic_entity.ThreeDLocation;
 import hnu.dll.config.Constant;
-import hnu.dll.entity.Elevator;
-import hnu.dll.entity.Entity;
-import hnu.dll.entity.Stair;
+import hnu.dll.entity.*;
 import hnu.dll.structure.basic_structure.Anchor;
 import hnu.dll.structure.graph.SimpleGraph;
 import org.junit.Before;
@@ -25,18 +23,31 @@ public class ProjectTest {
     public static final String TestDataPath = ConstantValues.ProjectDir + "/src/test/resources/data";
     public static Map<String, ThreeDLocation> locationMap;
     public static SimpleGraph data;
+    public static List<Robot> robotList;
+    public static Job job;
 
-    @Before
-    public void initialize() {
-//        String propertiesPath = System.getProperty("user.dir");
-//        InputStream resourceAsStream = ProjectTest.class.getResourceAsStream(propertiesPath);
-//        System.out.println(resourceAsStream);
+    public static void initializeRobotList() {
+        Robot tempRobot;
+        robotList = new ArrayList<>(5);
+        tempRobot = new Robot("robot-dog-1", Robot.DogRobotType, Constant.DogRobotPlaneVelocity, Constant.DogRobotStairVelocity, Constant.DogRobotCapacity);
+        robotList.add(tempRobot);
+        tempRobot = new Robot("robot-dog-2", Robot.DogRobotType, Constant.DogRobotPlaneVelocity, Constant.DogRobotStairVelocity, Constant.DogRobotCapacity);
+        robotList.add(tempRobot);
+        tempRobot = new Robot("robot-dog-3", Robot.DogRobotType, Constant.DogRobotPlaneVelocity, Constant.DogRobotStairVelocity, Constant.DogRobotCapacity);
+        robotList.add(tempRobot);
+        tempRobot = new Robot("robot-dog-3", Robot.DogRobotType, Constant.DogRobotPlaneVelocity, Constant.DogRobotStairVelocity, Constant.DogRobotCapacity);
+    }
+
+    public static void initializeJob() {
+
+    }
+
+    public static void initializeSimpleGraph() {
         PropertiesRead propertiesRead = new PropertiesRead(TestDataPath + "/location.properties");
         Map<String, Entity> entityMap = new HashMap<>();
         for (Map.Entry<Object, Object> entry : propertiesRead.getEntrySet()) {
             String entityName = (String) entry.getKey();
             String value = (String) entry.getValue();
-//            ThreeDLocation location = new ThreeDLocation(value, PropertiesSplitTag);
             if (entityName.startsWith("L")) {
                 PlaneLocation location = new PlaneLocation(value, PropertiesSplitTag);
                 entityMap.put(entityName, new Elevator(entityName, Constant.ElevatorAverageVelocity, Constant.OpenOrCloseDoorTimeCost, LayerSize, location));
@@ -49,15 +60,8 @@ public class ProjectTest {
                 entityMap.put(entityName, new Anchor(entityName, location));
             }
         }
-
-//        MyPrint.showMap(entityMap);
-
-
         data = new SimpleGraph();
-//        MyPrint.showSplitLine("*", 100);
-//        MyPrint.showSplitLine();
         List<Map<String, String>> mapList = CSVRead.readData(TestDataPath + "/test_graph_data.csv");
-//        System.out.println(mapList);
         Set<String> tempToNameSet;
         Entity startEntity, endEntity;
         Double tempWeight;
@@ -80,11 +84,18 @@ public class ProjectTest {
         }
     }
 
+    @BeforeClass
+    public static void initialize() {
+        initializeSimpleGraph();
+
+    }
+
 
     @Test
     public void basicProjectTest() {
 //        System.out.println(Constant.resourcePath);
-        MyPrint.showMap(data.getGraphTable());
-        System.out.println(data.getGraphTable().size());
+//        MyPrint.showMap(data.getGraphTable());
+//        System.out.println(data.getGraphTable().size());
+
     }
 }
