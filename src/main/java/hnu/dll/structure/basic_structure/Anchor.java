@@ -47,4 +47,13 @@ public class Anchor extends Entity implements Comparable<Anchor> {
     public int compareTo(Anchor anchor) {
         return this.threeDLocation.compareTo(anchor.threeDLocation);
     }
+
+    @Override
+    public String toString() {
+        return "Anchor{" +
+                "threeDLocation=" + threeDLocation +
+                ", id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                '}';
+    }
 }

@@ -51,4 +51,17 @@ public class Elevator extends Entity {
     public Integer getCurrentLayer() {
         return currentLayer;
     }
+
+    @Override
+    public String toString() {
+        return "Elevator{" +
+                "velocity=" + velocity +
+                ", openingOrCloseTimeCost=" + openingOrCloseTimeCost +
+                ", layerSize=" + layerSize +
+                ", planeLocation=" + planeLocation +
+                ", currentLayer=" + currentLayer +
+                ", id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                '}';
+    }
 }

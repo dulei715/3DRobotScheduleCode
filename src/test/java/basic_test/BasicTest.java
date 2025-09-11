@@ -1,3 +1,5 @@
+package basic_test;
+
 import hnu.dll.entity.Entity;
 import hnu.dll.entity.Robot;
 import org.junit.Test;

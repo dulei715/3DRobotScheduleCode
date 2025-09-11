@@ -53,5 +53,8 @@ public class SimpleGraph {
         return this.graphTable.get(preEntity);
     }
 
-
+    // for test
+    public Map<Entity, Map<Entity, Double>> getGraphTable() {
+        return graphTable;
+    }
 }

@@ -11,6 +11,12 @@ public class PlaneLocation {
         this.yIndex = yIndex;
     }
 
+    public PlaneLocation(String locationString, String splitTag) {
+        String[] locationStringArray = locationString.split(splitTag);
+        this.xIndex = Double.parseDouble(locationStringArray[0]);
+        this.yIndex = Double.parseDouble(locationStringArray[1]);
+    }
+
     public Double getxIndex() {
         return xIndex;
     }

@@ -19,6 +19,13 @@ public class ThreeDLocation implements Comparable<ThreeDLocation> {
         this.zIndex = zIndex;
     }
 
+    public ThreeDLocation(String locationString, String splitTag) {
+        String[] locationStringArray = locationString.split(splitTag);
+        this.xIndex = Double.parseDouble(locationStringArray[0]);
+        this.yIndex = Double.parseDouble(locationStringArray[1]);
+        this.zIndex = Double.parseDouble(locationStringArray[2]);
+    }
+
 
 
     public Double getxIndex() {
