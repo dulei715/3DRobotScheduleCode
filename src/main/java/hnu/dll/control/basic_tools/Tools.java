@@ -296,13 +296,30 @@ public class Tools {
          *      胜利者需要等待电梯空运时间
          *      其他失败者要要等到胜利者执行完，并且还要算上执行完后电梯空运行的时间
          *
-         * todo: 要将当前第一次占用电梯且无冲突的执行路线延迟空电梯运行的时间单位
-         * todo: 要将都是新占用的
+         * todo: 1. 要将当前第一次占用电梯且无冲突的执行路线延迟空电梯运行的时间单位(Single User)
+         * todo: 2. 要将都是新占用的 (Multiple first Users)
          */
+
+        Map<Elevator, SortedPathStructure<TimePointPath>> singleFirstElevatorOccupationMap = new HashMap<>();
+        Map<Elevator, BasicPair<SortedPathStructure<TimePointPath>, Set<SortedPathStructure<TimePointPath>>>> winAndFailureElevatorPathMap = new HashMap<>();
+        Map<Entity, BasicPair<SortedPathStructure<TimePointPath>, Set<SortedPathStructure<TimePointPath>>>> winAndFailureEntityPathMap = new HashMap<>();
+
 
         Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> tempConflictMap = new HashMap<>(conflictMapWithElevatorProposal);
         Iterator<Map.Entry<AnchorEntity, Set<SortedPathStructure<TimePointPath>>>> tempEntryIterator = tempConflictMap.entrySet().iterator();
         Map.Entry<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> tempAnchorEntitySetEntry;
+
+        while (tempEntryIterator.hasNext()) {
+            tempAnchorEntitySetEntry = tempEntryIterator.next();
+            tempAnchorEntity = tempAnchorEntitySetEntry.getKey();
+            tempPathStructureSet = tempAnchorEntitySetEntry.getValue();
+            if (tempPathStructureSet.size() <= 1) {
+                singleFirstElevatorOccupationMap.put((Elevator) tempAnchorEntity.getEntity(), tempPathStructureSet.iterator().next());
+                tempEntryIterator.remove();
+            }
+        }
+        //todo:
+        tempEntryIterator = tempConflictMap.entrySet().iterator();
         while (conflictTimeSlot > 0 && tempEntryIterator.hasNext()) {
             // 处理存在上个时刻已经占用电梯的冲突情况：找出冲突中的已经占用电梯的实体作为赢家，其他为失败者，并从冲突集合中剔除
             tempAnchorEntitySetEntry = tempEntryIterator.next();

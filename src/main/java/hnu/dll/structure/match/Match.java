@@ -1,8 +1,6 @@
 package hnu.dll.structure.match;
 
 import cn.edu.dll.constant_values.ConstantValues;
-import com.sun.tools.javac.util.StringUtils;
-import hnu.dll.structure.basic_structure.BasicPair;
 
 import java.util.ArrayList;
 import java.util.List;
