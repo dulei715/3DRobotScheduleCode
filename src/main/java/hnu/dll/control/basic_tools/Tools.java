@@ -5,6 +5,7 @@ import hnu.dll.basic_entity.location.ThreeDLocation;
 import hnu.dll.config.Constant;
 import hnu.dll.control.BasicFunctions;
 import hnu.dll.control.BasicUtils;
+import hnu.dll.control.topk.AnchorEntityConvertor;
 import hnu.dll.entity.*;
 import hnu.dll.structure.*;
 import hnu.dll.structure.basic_structure.Anchor;
@@ -147,7 +148,8 @@ public class Tools {
 
 
 
-    public static Map<BasicPair<Task, Robot>,SortedPathStructure<AnchorPointPath>> taskAssignment(Map<String, TimeWeightedGraph> graphMap, List<Task> taskList, List<Robot> robotList, Integer topKSize) {
+
+    public static Map<BasicPair<Task, Robot>,SortedPathStructure<AnchorPointPath>> taskAssignment(Map<String, TimeWeightedGraph> graphMap, List<Task> taskList, List<Robot> robotList, Integer topKSize, AnchorEntityConvertor convert) {
         Anchor startAnchor, innerAnchor, endAnchor;
         Map<BasicPair<Task, Robot>, SortedPathStructure<AnchorPointPath>> result = new HashMap<>();
         SortedPathStructure<AnchorPointPath> firstSegmentSortedPaths, lastSegmentSortedPath;
@@ -169,7 +171,7 @@ public class Tools {
             for (Map.Entry<String, TimeWeightedGraph> entry : graphMap.entrySet()) {
                 String type = entry.getKey();
                 TimeWeightedGraph tempGraph = entry.getValue();
-                tempLastSegmentSortedPathMap.put(type, BasicFunctions.topKPathTime(tempGraph, innerAnchor, endAnchor, topKSize));
+                tempLastSegmentSortedPathMap.put(type, BasicFunctions.topKPathTime(tempGraph, innerAnchor, endAnchor, topKSize, convert));
             }
 
 //            lastSegmentSortedPath = BasicFunctions.topKPathTime(graph, innerLocation, endLocation, topKSize);
@@ -182,7 +184,7 @@ public class Tools {
                 lastSegmentSortedPath = tempLastSegmentSortedPathMap.get(robotType);
                 tempStructure = new SortedPathStructure<>();
                 startAnchor = robot.getLocation();
-                firstSegmentSortedPaths = BasicFunctions.topKPathTime(graphMap.get(robotType), startAnchor, innerAnchor, topKSize);
+                firstSegmentSortedPaths = BasicFunctions.topKPathTime(graphMap.get(robotType), startAnchor, innerAnchor, topKSize, convert);
                 for (AnchorPointPath firstPath : firstSegmentSortedPaths.getSortedPaths()) {
                     for (AnchorPointPath lastPath : lastSegmentSortedPath.getSortedPaths()) {
                         newPath = AnchorPointPath.getCombinePathWithBothTailWeights(firstPath, lastPath, fetchTaskTimeCost, deliveryTaskTimeCost);
@@ -415,11 +417,11 @@ public class Tools {
      * @param job
      * @return
      */
-    public static Match getPlanPath(Map<String, TimeWeightedGraph> graphMap, List<Robot> robotList, Job job) {
+    public static Match getPlanPath(Map<String, TimeWeightedGraph> graphMap, List<Robot> robotList, Job job, AnchorEntityConvertor convert) {
         Map<BasicPair<Task,Robot>, SortedPathStructure<TimePointPath>> result;
         job.initialTaskStartTimeAndEndTime();
         List<Task> taskList = job.getTaskList();
-        Map<BasicPair<Task, Robot>, SortedPathStructure<AnchorPointPath>> matchMapBasicPair = taskAssignment(graphMap, taskList, robotList, Constant.topKSize);
+        Map<BasicPair<Task, Robot>, SortedPathStructure<AnchorPointPath>> matchMapBasicPair = taskAssignment(graphMap, taskList, robotList, Constant.topKSize,  convert);
         Integer maximalTimeSlotLength;
         BasicPair<Task, Robot> tempPair;
         SortedPathStructure<TimePointPath> pathStructure;

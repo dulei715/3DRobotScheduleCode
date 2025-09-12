@@ -35,4 +35,11 @@ public class AnchorEntity implements Comparable<AnchorEntity>{
     public int compareTo(AnchorEntity that) {
         return this.anchor.compareTo(that.anchor);
     }
+
+    @Override
+    public String toString() {
+        return "[" + anchor +
+                ", " + entity.getName() +
+                ']';
+    }
 }

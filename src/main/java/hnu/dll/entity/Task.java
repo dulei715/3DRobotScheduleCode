@@ -74,4 +74,9 @@ public class Task extends Entity {
     public int hashCode() {
         return Objects.hash(startAnchor, endAnchor, fetchTime, sendOffTime, occupyingSpace);
     }
+
+    @Override
+    public String toString() {
+        return name;
+    }
 }

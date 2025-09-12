@@ -2,7 +2,9 @@ package hnu.dll.control;
 
 import hnu.dll.basic_entity.location.ThreeDLocation;
 import hnu.dll.config.Constant;
+import hnu.dll.control.topk.AnchorEntityConvertor;
 import hnu.dll.control.topk.YenTopKPaths;
+import hnu.dll.entity.Entity;
 import hnu.dll.entity.Robot;
 import hnu.dll.entity.Task;
 import hnu.dll.structure.SortedPathStructure;
@@ -50,8 +52,43 @@ public class BasicFunctions {
      * @param topKSize
      * @return
      */
-    public static List<AnchorPointPath> getTopKShortestPath(TimeWeightedGraph graph, Anchor startAnchor, Anchor endAnchor, Integer topKSize) {
-        return YenTopKPaths.kShortestAnchorPointPaths(graph, startAnchor, endAnchor, topKSize);
+    public static List<AnchorPointPath> getTopKShortestPath(TimeWeightedGraph graph, Anchor startAnchor, Anchor endAnchor, Integer topKSize, AnchorEntityConvertor convert) {
+        return YenTopKPaths.kShortestAnchorPointPaths(graph, startAnchor, endAnchor, topKSize, convert);
+    }
+
+    public static Map<String, List<Anchor>> extractStringAnchorListMap(TimeWeightedGraph graph) {
+        Map<Anchor, Map<Anchor, Double>> graphTable = graph.getGraphTable();
+        Set<Anchor> anchorSet = graphTable.keySet();
+        Map<String, List<Anchor>> result = new HashMap<>();
+        String name, realName;
+        String[] splitStr;
+        for (Anchor anchor : anchorSet) {
+            name = anchor.getName();
+            if (name.startsWith("B") || name.startsWith("C")) {
+                splitStr = name.split(" ");
+                realName = splitStr[splitStr.length-1];
+            } else {
+                realName = name;
+            }
+            result.computeIfAbsent(realName, k -> new ArrayList<>()).add(anchor);
+        }
+        return result;
+    }
+
+    public static Map<Anchor, Entity> getAnchorEntityMap(Map<String, List<Anchor>> stringAnchorListMap, Map<String, Entity> entityMap) {
+        Map<Anchor, Entity> result = new HashMap<>();
+        List<Anchor> tempAnchorList;
+        String name;
+        Entity tempEntity;
+        for (Map.Entry<String, List<Anchor>> entry : stringAnchorListMap.entrySet()) {
+            name = entry.getKey();
+            tempAnchorList = entry.getValue();
+            tempEntity = entityMap.get(name);
+            for (Anchor anchor : tempAnchorList) {
+                result.put(anchor, tempEntity);
+            }
+        }
+        return result;
     }
 
     public static BipartiteGraph<Task, Robot, Double> extractTopOneToConstructBipartiteGraph(Map<Task, Map<Robot, SortedPathStructure<AnchorPointPath>>> topKMap) {
@@ -72,8 +109,8 @@ public class BasicFunctions {
         return bipartiteGraph;
     }
 
-    public static SortedPathStructure<AnchorPointPath> topKPathTime(TimeWeightedGraph graph, Anchor startAnchor, Anchor endAnchor, Integer topKSize) {
-        List<AnchorPointPath> topKPathList = BasicFunctions.getTopKShortestPath(graph, startAnchor, endAnchor, topKSize);
+    public static SortedPathStructure<AnchorPointPath> topKPathTime(TimeWeightedGraph graph, Anchor startAnchor, Anchor endAnchor, Integer topKSize, AnchorEntityConvertor convertor) {
+        List<AnchorPointPath> topKPathList = BasicFunctions.getTopKShortestPath(graph, startAnchor, endAnchor, topKSize, convertor);
         SortedPathStructure<AnchorPointPath> result = new SortedPathStructure<>();
         for (AnchorPointPath path : topKPathList) {
             result.addPath(path);

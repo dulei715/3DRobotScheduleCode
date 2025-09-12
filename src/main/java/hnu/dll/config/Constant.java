@@ -31,7 +31,7 @@ public class Constant {
 
     public static final Double PersonRobotPlaneVelocity = 0.3;
     public static final Double PersonRobotStairVelocity = 0.1;
-    public static final Double PersonRobotCapacity = 5D;
+    public static final Double PersonRobotCapacity = 7D;
 
     // for Stair
     public static final Double stairAngle = Math.PI / 6;  // 设置楼梯仰角30度

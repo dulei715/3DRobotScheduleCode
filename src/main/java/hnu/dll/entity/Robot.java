@@ -99,4 +99,9 @@ public class Robot extends Entity {
     public int hashCode() {
         return Objects.hash(type, flatGroundVelocity, stairVelocity, capacity, anchorLocation);
     }
+
+    @Override
+    public String toString() {
+        return name;
+    }
 }

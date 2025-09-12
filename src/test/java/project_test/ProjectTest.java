@@ -10,6 +10,8 @@ import hnu.dll.basic_entity.location.ThreeDLocation;
 import hnu.dll.config.Constant;
 import hnu.dll.control.BasicFunctions;
 import hnu.dll.control.basic_tools.Tools;
+import hnu.dll.control.topk.AnchorEntityConvertor;
+import hnu.dll.control.topk.AnchorEntityTransform;
 import hnu.dll.entity.*;
 import hnu.dll.structure.SortedPathStructure;
 import hnu.dll.structure.TimeWeightedGraph;
@@ -31,6 +33,8 @@ public class ProjectTest {
     public static SimpleGraph simpleGraph;
     public static Map<String, List<Robot>> robotTypeMap;
     public static Map<String, TimeWeightedGraph> robotTypeTimeWeightedGraphMap;
+    public static Map<String, List<Anchor>> stringAnchorListMap;
+    public static AnchorEntityConvertor anchorEntityConvertor;
     public static Job job;
 
     public static void initializeRobotTypeMap() {
@@ -139,12 +143,19 @@ public class ProjectTest {
         }
     }
 
+    public static void initializeStringAnchorListMapByAnyTimeWeightedGraph(TimeWeightedGraph timeWeightedGraph) {
+        stringAnchorListMap = BasicFunctions.extractStringAnchorListMap(timeWeightedGraph);
+    }
+
     @BeforeClass
     public static void initialize() {
         initializeSimpleGraph();
         initializeRobotTypeMap();
         initializeJob();
         initializeTimeWeightedGraphMap();
+        TimeWeightedGraph timeWeightedGraph = robotTypeTimeWeightedGraphMap.values().iterator().next();
+        initializeStringAnchorListMapByAnyTimeWeightedGraph(timeWeightedGraph);
+        anchorEntityConvertor = new AnchorEntityTransform(stringAnchorListMap, entityMap);
     }
 
     @Test
@@ -169,6 +180,14 @@ public class ProjectTest {
     }
 
     @Test
+    public void extractAnchorSetTest() {
+        TimeWeightedGraph timeWeightedGraph = robotTypeTimeWeightedGraphMap.values().iterator().next();
+        Map<String, List<Anchor>> stringAnchorListMap = BasicFunctions.extractStringAnchorListMap(timeWeightedGraph);
+        MyPrint.showMap(stringAnchorListMap);
+        System.out.println(stringAnchorListMap.size());
+    }
+
+    @Test
     public void topKShortedPathTest() {
         TimeWeightedGraph graph = robotTypeTimeWeightedGraphMap.get(Robot.DogRobotType);
 //        System.out.println(graph.getGraphTable());
@@ -176,7 +195,7 @@ public class ProjectTest {
         Anchor endAnchor = (Anchor) entityMap.get("A-2-10");
 //      (1D,1D,0D);
 //      (6D,6D,3D);
-        List<AnchorPointPath> pathList = BasicFunctions.getTopKShortestPath(graph, startAnchor, endAnchor, Constant.topKSize);
+        List<AnchorPointPath> pathList = BasicFunctions.getTopKShortestPath(graph, startAnchor, endAnchor, Constant.topKSize, anchorEntityConvertor);
         MyPrint.showList(pathList, ConstantValues.LINE_SPLIT);
     }
 
@@ -186,7 +205,10 @@ public class ProjectTest {
         List<Task> taskList = job.getTaskList();
         List<Robot> robotList = Robot.getRobotList(robotTypeMap);
         Integer topKSize = Constant.topKSize; // 3
-        Map<BasicPair<Task, Robot>, SortedPathStructure<AnchorPointPath>> pathMap = Tools.taskAssignment(robotTypeTimeWeightedGraphMap, taskList, robotList, topKSize);
+        Map<BasicPair<Task, Robot>, SortedPathStructure<AnchorPointPath>> pathMap = Tools.taskAssignment(robotTypeTimeWeightedGraphMap, taskList, robotList, topKSize, anchorEntityConvertor);
         MyPrint.showMap(pathMap);
     }
+
+    
+
 }

@@ -23,6 +23,10 @@ public class SortedPathStructure<T extends Path> {
         return sortedPaths;
     }
 
-
-
+    @Override
+    public String toString() {
+        return "{" +
+                sortedPaths.peek()
+                +'}';
+    }
 }

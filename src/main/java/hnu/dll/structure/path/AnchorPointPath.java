@@ -124,11 +124,14 @@ public class AnchorPointPath extends Path implements Comparable<AnchorPointPath>
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(startAnchorEntity.getAnchor().getName());
+        Double totalValue = 0D, tempWeight;
         for (BasicPair<Double, AnchorEntity> pair : this.internalDataList) {
-            stringBuilder.append(" --(").append(pair.getKey()).append(")-> ");
+            tempWeight = pair.getKey();
+            stringBuilder.append(" --(").append(tempWeight).append(")-> ");
+            totalValue += tempWeight;
             stringBuilder.append(pair.getValue());
         }
-        return stringBuilder.toString();
+        return "sum(weight)=" + totalValue + ": " + stringBuilder;
     }
 
     @Override
