@@ -10,20 +10,25 @@ import java.util.Map;
 import java.util.Set;
 
 public class CompeteStructure {
-    private Map<Elevator, SortedPathStructure<TimePointPath>> singleFirstElevatorOccupationMap;
-    private Map<Elevator, BasicPair<SortedPathStructure<TimePointPath>, Set<SortedPathStructure<TimePointPath>>>> winAndFailureElevatorPathStructureMap;
-    private Map<Entity, BasicPair<SortedPathStructure<TimePointPath>, Set<SortedPathStructure<TimePointPath>>>> winAndFailureEntityPathStructureMap;
+    private Map<AnchorEntity, SortedPathStructure<TimePointPath>> singleFirstElevatorOccupationMap;
+    private Map<AnchorEntity, SortedPathStructure<TimePointPath>> winnerMap;
+    private Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> failureMap;
 
-    public CompeteStructure() {
-        this.singleFirstElevatorOccupationMap = new HashMap<>();
-        this.winAndFailureElevatorPathStructureMap = new HashMap<>();
-        this.winAndFailureEntityPathStructureMap = new HashMap<>();
-    }
-
-    public CompeteStructure(Map<Elevator, SortedPathStructure<TimePointPath>> singleFirstElevatorOccupationMap, Map<Elevator, BasicPair<SortedPathStructure<TimePointPath>, Set<SortedPathStructure<TimePointPath>>>> winAndFailureElevatorPathStructureMap, Map<Entity, BasicPair<SortedPathStructure<TimePointPath>, Set<SortedPathStructure<TimePointPath>>>> winANdFailureEntityMap) {
+    public CompeteStructure(Map<AnchorEntity, SortedPathStructure<TimePointPath>> singleFirstElevatorOccupationMap, Map<AnchorEntity, SortedPathStructure<TimePointPath>> winnerMap, Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> failureMap) {
         this.singleFirstElevatorOccupationMap = singleFirstElevatorOccupationMap;
-        this.winAndFailureElevatorPathStructureMap = winAndFailureElevatorPathStructureMap;
-        this.winAndFailureEntityPathStructureMap = winANdFailureEntityMap;
+        this.winnerMap = winnerMap;
+        this.failureMap = failureMap;
     }
 
+    public Map<AnchorEntity, SortedPathStructure<TimePointPath>> getSingleFirstElevatorOccupationMap() {
+        return singleFirstElevatorOccupationMap;
+    }
+
+    public Map<AnchorEntity, SortedPathStructure<TimePointPath>> getWinnerMap() {
+        return winnerMap;
+    }
+
+    public Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> getFailureMap() {
+        return failureMap;
+    }
 }
