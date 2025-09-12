@@ -18,6 +18,7 @@ import hnu.dll.structure.TimeWeightedGraph;
 import hnu.dll.structure.basic_structure.Anchor;
 import hnu.dll.structure.basic_structure.BasicPair;
 import hnu.dll.structure.graph.SimpleGraph;
+import hnu.dll.structure.match.Match;
 import hnu.dll.structure.path.AnchorPointPath;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -209,6 +210,15 @@ public class ProjectTest {
         MyPrint.showMap(pathMap);
     }
 
-    
+    @Test
+    public void getPlanPathTest() {
+        Map<String, TimeWeightedGraph> timeGraphMap = robotTypeTimeWeightedGraphMap;
+        List<Robot> robotList = new ArrayList<>();
+        for (List<Robot> tempRobotList : robotTypeMap.values()) {
+            robotList.addAll(tempRobotList);
+        }
+        Match planPath = Tools.getPlanPath(timeGraphMap, robotList, job, anchorEntityConvertor);
+        System.out.println(planPath);
+    }
 
 }

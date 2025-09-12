@@ -1,5 +1,7 @@
 package hnu.dll.structure.match;
 
+import cn.edu.dll.constant_values.ConstantValues;
+import com.sun.tools.javac.util.StringUtils;
 import hnu.dll.structure.basic_structure.BasicPair;
 
 import java.util.ArrayList;
@@ -16,7 +18,7 @@ public class Match {
 
     public Match() {
         this.matchElementList = new ArrayList<>();
-//        this.maxCostTimeLength = 0;
+        this.maxCostTimeLength = 0;
     }
 
     public List<MatchElement> getMatchElementList() {
@@ -25,6 +27,7 @@ public class Match {
 
     public void add(MatchElement matchElement) {
         this.matchElementList.add(matchElement);
+        this.maxCostTimeLength = Math.max(this.maxCostTimeLength, matchElement.getTimePointPath().getTimeLength());
     }
 
 
@@ -34,5 +37,16 @@ public class Match {
 
     public void setMaxCostTimeLength(Integer maxCostTimeLength) {
         this.maxCostTimeLength = maxCostTimeLength;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("maxCostTime: ").append(maxCostTimeLength).append(ConstantValues.LINE_SPLIT);
+        stringBuilder.append("{");
+        for (MatchElement matchElement : matchElementList) {
+            stringBuilder.append(matchElement).append(ConstantValues.LINE_SPLIT);
+        }
+        return stringBuilder.toString();
     }
 }

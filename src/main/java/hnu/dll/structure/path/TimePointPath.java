@@ -4,6 +4,7 @@ import hnu.dll.config.Constant;
 import hnu.dll.structure.AnchorEntity;
 import hnu.dll.structure.basic_structure.BasicPair;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 
 public class TimePointPath extends Path implements Comparable<TimePointPath>{
@@ -71,5 +72,21 @@ public class TimePointPath extends Path implements Comparable<TimePointPath>{
             }
         }
         return 0;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
+        Iterator<AnchorEntity> iterator = this.timeStreamAnchorList.iterator();
+        if (!iterator.hasNext()) {
+            return "";
+        }
+        AnchorEntity tempAnchorEntity = iterator.next();
+        stringBuilder.append(tempAnchorEntity);
+        while (iterator.hasNext()) {
+            tempAnchorEntity = iterator.next();
+            stringBuilder.append(" --> ").append(tempAnchorEntity);
+        }
+        return "len=" + this.timeStreamAnchorList.size() + ": " + stringBuilder;
     }
 }

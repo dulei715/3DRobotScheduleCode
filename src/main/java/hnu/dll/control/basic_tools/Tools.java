@@ -236,7 +236,13 @@ public class Tools {
         return pathLength;
     }
 
-    private static Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> getConflictMap(Collection<SortedPathStructure<TimePointPath>> temporalPathSet, Integer timeSlot) {
+    /**
+     * 返回冲突的实体以及首次征用电梯(上一时刻未占用该电梯) 对应的路线
+     * @param temporalPathSet
+     * @param timeSlot
+     * @return
+     */
+    private static Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> getConflictMapWithElevatorSingleProposalSet(Collection<SortedPathStructure<TimePointPath>> temporalPathSet, Integer timeSlot) {
         Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> result = new HashMap<>();
         TimePointPath tempPath;
         AnchorEntity tempAnchorEntity;
@@ -245,14 +251,19 @@ public class Tools {
         for (SortedPathStructure<TimePointPath> pathStructure : temporalPathSet) {
             tempPath = pathStructure.getFirst();
             tempAnchorEntity = tempPath.getAnchorEntityByIndex(timeSlot);
-            tempSet = result.getOrDefault(tempAnchorEntity, new HashSet<>());
-            tempSet.add(pathStructure);
+            result.computeIfAbsent(tempAnchorEntity, k->new HashSet<>()).add(pathStructure);
+//            tempSet = result.getOrDefault(tempAnchorEntity, new HashSet<>());
+//            tempSet.add(pathStructure);
         }
         Iterator<Map.Entry<AnchorEntity, Set<SortedPathStructure<TimePointPath>>>> iterator = result.entrySet().iterator();
         // 移除只含一个元素的集合，表示不冲突
         while (iterator.hasNext()) {
             next = iterator.next();
-            if (next.getValue().size() > 1) {
+            // 只有当实体的占用不大于1(无冲突)且[占用的不是电梯或[是电梯但上个时刻已经占用了]时才移除]
+            Entity tempEntity = next.getKey().getEntity();
+            Set<SortedPathStructure<TimePointPath>> tempStructureSet = next.getValue();
+            if (tempStructureSet.size() <= 1 && (!(tempEntity instanceof Elevator) ||
+                    (timeSlot > 0 && tempStructureSet.iterator().next().getFirst().getAnchorEntityByIndex(timeSlot-1).getEntity().equals(tempEntity)))) {
                 iterator.remove();
             }
         }
@@ -261,20 +272,63 @@ public class Tools {
 
     /**
      * 获取所有冲突中的胜利匹配（路线最长）
-     * @param conflictMap
+     * @param conflictMapWithElevatorProposal
      * @return
      */
-    protected static BasicPair<Map<AnchorEntity, SortedPathStructure<TimePointPath>>, Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>>> getWinnerAndFailureMatch(Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> conflictMap) {
-        AnchorEntity tempAnchorEntity;
+    protected static BasicPair<Map<AnchorEntity, SortedPathStructure<TimePointPath>>, Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>>> getWinnerAndFailureMatch(Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> conflictMapWithElevatorProposal, Integer conflictTimeSlot) {
+        AnchorEntity tempAnchorEntity, beforeAnchorEntity;
         Set<SortedPathStructure<TimePointPath>> tempPathStructureSet, failurePathStructureSet;
         SortedPathStructure<TimePointPath> winnerPath = null;
         Integer tempLength, maxLength;
+        TimePointPath tempTimePointPath;
         Map<AnchorEntity, SortedPathStructure<TimePointPath>> winnerMap = new HashMap<>();
         Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> failureMap = new HashMap<>();
-        for (Map.Entry<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> anchorEntitySetEntry : conflictMap.entrySet()) {
+        /**
+         * todo: 已修正
+         * 1. 已经占用电梯的优先级最高
+         * 2. 同时占用电梯的剩余路线时长越长优先级越高
+         *
+         * 要对是否存在已经占用的电梯的情况进行处理，分类续解决冲突，传入的冲突map中，值的集合有两个及以上的按照正常冲突处理，仅有一个的就是电梯
+         * (1) 如果已占用
+         *      胜利者不用延迟；
+         *      其他失败者的要等到当前执行完，并且还要算上执行完后电梯空运行的时间（到达任意一个失败者所在层）
+         * (2) 如果电梯被同时征用
+         *      胜利者需要等待电梯空运时间
+         *      其他失败者要要等到胜利者执行完，并且还要算上执行完后电梯空运行的时间
+         *
+         * todo: 要将当前第一次占用电梯且无冲突的执行路线延迟空电梯运行的时间单位
+         * todo: 要将都是新占用的
+         */
+
+        Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> tempConflictMap = new HashMap<>(conflictMapWithElevatorProposal);
+        Iterator<Map.Entry<AnchorEntity, Set<SortedPathStructure<TimePointPath>>>> tempEntryIterator = tempConflictMap.entrySet().iterator();
+        Map.Entry<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> tempAnchorEntitySetEntry;
+        while (conflictTimeSlot > 0 && tempEntryIterator.hasNext()) {
+            // 处理存在上个时刻已经占用电梯的冲突情况：找出冲突中的已经占用电梯的实体作为赢家，其他为失败者，并从冲突集合中剔除
+            tempAnchorEntitySetEntry = tempEntryIterator.next();
+            tempAnchorEntity = tempAnchorEntitySetEntry.getKey();
+            tempPathStructureSet = tempAnchorEntitySetEntry.getValue();
+            for (SortedPathStructure<TimePointPath> tempPathStructure : tempPathStructureSet) {
+                tempTimePointPath = tempPathStructure.getFirst();
+                beforeAnchorEntity = tempTimePointPath.getAnchorEntityByIndex(conflictTimeSlot - 1);
+                if (beforeAnchorEntity.getEntity().equals(tempAnchorEntity.getEntity())) {
+                    winnerMap.put(tempAnchorEntity, tempPathStructure);
+                    failurePathStructureSet = new HashSet<>(tempPathStructureSet);
+                    failurePathStructureSet.remove(tempPathStructure);
+                    failureMap.put(tempAnchorEntity, failurePathStructureSet);
+                    tempEntryIterator.remove();
+                    break;
+                }
+            }
+        }
+
+        tempEntryIterator = tempConflictMap.entrySet().iterator();
+        // 处理都是新占用电梯的情况：找出冲突中剩余路线时长最长的座位赢家，其他为失败者
+        while (tempEntryIterator.hasNext()) {
+            tempAnchorEntitySetEntry = tempEntryIterator.next();
             maxLength = 0;
-            tempAnchorEntity = anchorEntitySetEntry.getKey();
-            tempPathStructureSet = anchorEntitySetEntry.getValue();
+            tempAnchorEntity = tempAnchorEntitySetEntry.getKey();
+            tempPathStructureSet = tempAnchorEntitySetEntry.getValue();
             for (SortedPathStructure<TimePointPath> tempPathStructure : tempPathStructureSet) {
                 tempLength = tempPathStructure.getFirst().getTimeLength();
                 if (tempLength > maxLength) {
@@ -283,8 +337,7 @@ public class Tools {
                 }
             }
             winnerMap.put(tempAnchorEntity, winnerPath);
-            failurePathStructureSet = new HashSet<>();
-            failurePathStructureSet.addAll(tempPathStructureSet);
+            failurePathStructureSet = new HashSet<>(tempPathStructureSet);
             failurePathStructureSet.remove(winnerPath);
             failureMap.put(tempAnchorEntity, failurePathStructureSet);
         }
@@ -394,7 +447,10 @@ public class Tools {
         Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> failureMatch;
         Map<SortedPathStructure<TimePointPath>, Integer> waitingTimeSet;
         for (int i = 0; i < maximumPathLength; ++i) {
-            conflictMap = getConflictMap(temporalPathMap.values(), i);
+            conflictMap = getConflictMapWithElevatorSingleProposalSet(temporalPathMap.values(), i);
+//            if (!conflictMap.isEmpty()) {
+//                System.out.println("haha");
+//            }
             winFailurePair = getWinnerAndFailureMatch(conflictMap);
             winnerMatch = winFailurePair.getKey();
             failureMatch = winFailurePair.getValue();
@@ -412,24 +468,23 @@ public class Tools {
 
     /**
      * 核心算法
-     * @param graphMap
+     * @param timeGraphMap
      * @param robotList
      * @param job
      * @return
      */
-    public static Match getPlanPath(Map<String, TimeWeightedGraph> graphMap, List<Robot> robotList, Job job, AnchorEntityConvertor convert) {
+    public static Match getPlanPath(Map<String, TimeWeightedGraph> timeGraphMap, List<Robot> robotList, Job job, AnchorEntityConvertor convert) {
         Map<BasicPair<Task,Robot>, SortedPathStructure<TimePointPath>> result;
         job.initialTaskStartTimeAndEndTime();
         List<Task> taskList = job.getTaskList();
-        Map<BasicPair<Task, Robot>, SortedPathStructure<AnchorPointPath>> matchMapBasicPair = taskAssignment(graphMap, taskList, robotList, Constant.topKSize,  convert);
-        Integer maximalTimeSlotLength;
+        Map<BasicPair<Task, Robot>, SortedPathStructure<AnchorPointPath>> matchMapBasicPair = taskAssignment(timeGraphMap, taskList, robotList, Constant.topKSize,  convert);
         BasicPair<Task, Robot> tempPair;
         SortedPathStructure<TimePointPath> pathStructure;
         MatchElement tempMatchElement;
         AnchorPointPath tempAnchorPointPath;
         TimePointPath tempTimePointPath;
         result = toTimePointSortedPath(matchMapBasicPair);
-        maximalTimeSlotLength = eliminate(result);
+        eliminate(result);
         Match match = new Match();
 
         for (Map.Entry<BasicPair<Task, Robot>, SortedPathStructure<TimePointPath>> entry : result.entrySet()) {
@@ -440,8 +495,7 @@ public class Tools {
             tempMatchElement = new MatchElement(tempPair.getKey(), tempPair.getValue(), tempAnchorPointPath, tempTimePointPath);
             match.add(tempMatchElement);
         }
-        match.setMaxCostTimeLength(maximalTimeSlotLength);
-        
+
         return match;
     }
 

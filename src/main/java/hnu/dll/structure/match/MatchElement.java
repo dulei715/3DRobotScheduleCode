@@ -52,4 +52,13 @@ public class MatchElement {
     public void setTimePointPath(TimePointPath timePointPath) {
         this.timePointPath = timePointPath;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("(").append(task.getName()).append(", ").append(robot.getName()).append(")");
+        stringBuilder.append("{").append(anchorPointPath).append("}, ");
+        stringBuilder.append("{").append(timePointPath).append("}");
+        return stringBuilder.toString();
+    }
 }
