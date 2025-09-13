@@ -19,9 +19,17 @@ import java.util.*;
 
 public class BasicFunctions {
 
+    public static int sign(double x) {
+        return (x > 0) ? 1 : (x < 0 ? -1 : 0);
+    }
+
     // 暂不支持存在地下层的情况
     public static Integer getElevatorRunningTimeSlots(Integer startLayer, Integer endLayer, Double averageRunningVelocity) {
         Double realTime = (endLayer - startLayer) * Constant.NeighboringLayersDistance / averageRunningVelocity;
+        return BasicUtils.toUnitTimeShareSize(realTime);
+    }
+    public static Integer getElevatorRunningTimeAndOpeningCloseDoorSlots(Integer startLayer, Integer endLayer, Double averageRunningVelocity, Double openingDoorTime, Double closeDoorTime) {
+        Double realTime = (endLayer - startLayer) * Constant.NeighboringLayersDistance / averageRunningVelocity + openingDoorTime + closeDoorTime;
         return BasicUtils.toUnitTimeShareSize(realTime);
     }
 

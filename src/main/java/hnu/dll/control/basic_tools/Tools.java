@@ -62,7 +62,7 @@ public class Tools {
                 anchorA = layersAnchorList.get(i);
                 for (int j = 0; j < i; j++) {
                     anchorB = layersAnchorList.get(j);
-                    Double time = elevator.getCrossFloorRunningTime(i + 1, j + 1, Constant.NeighboringLayersDistance);
+                    Double time = elevator.getCrossFloorRunningTime(i + 1, j + 1);
                     timeWeightedGraph.addElement(anchorA, anchorB, time);
                     timeWeightedGraph.addElement(anchorB, anchorA, time);
                 }
@@ -281,8 +281,7 @@ public class Tools {
         SortedPathStructure<TimePointPath> winnerPath = null;
         Integer tempLength, maxLength;
         TimePointPath tempTimePointPath;
-        Map<AnchorEntity, SortedPathStructure<TimePointPath>> winnerMap = new HashMap<>();
-        Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> failureMap = new HashMap<>();
+        Map<AnchorEntity, BasicPair<SortedPathStructure<TimePointPath>, Set<SortedPathStructure<TimePointPath>>>> multipleMap, alreadyMap;
         /**
          * todo: 已修正
          * 1. 已经占用电梯的优先级最高
@@ -324,9 +323,11 @@ public class Tools {
                 tempEntryIterator.remove();
             }
         }
+
+        // 处理存在上个时刻已经占用实体的冲突情况：找出冲突中的已经占用电梯的实体作为赢家，其他为失败者，并从冲突集合中剔除
+        alreadyMap = new HashMap<>();
         tempEntryIterator = tempConflictMap.entrySet().iterator();
         while (conflictTimeSlot > 0 && tempEntryIterator.hasNext()) {
-            // 处理存在上个时刻已经占用电梯的冲突情况：找出冲突中的已经占用电梯的实体作为赢家，其他为失败者，并从冲突集合中剔除
             tempAnchorEntitySetEntry = tempEntryIterator.next();
             tempAnchorEntity = tempAnchorEntitySetEntry.getKey();
             tempPathStructureSet = tempAnchorEntitySetEntry.getValue();
@@ -334,18 +335,18 @@ public class Tools {
                 tempTimePointPath = tempPathStructure.getFirst();
                 beforeAnchorEntity = tempTimePointPath.getAnchorEntityByIndex(conflictTimeSlot - 1);
                 if (beforeAnchorEntity.getEntity().equals(tempAnchorEntity.getEntity())) {
-                    winnerMap.put(tempAnchorEntity, tempPathStructure);
                     failurePathStructureSet = new HashSet<>(tempPathStructureSet);
                     failurePathStructureSet.remove(tempPathStructure);
-                    failureMap.put(tempAnchorEntity, failurePathStructureSet);
+                    alreadyMap.put(tempAnchorEntity, new BasicPair<>(tempPathStructure, failurePathStructureSet));
                     tempEntryIterator.remove();
                     break;
                 }
             }
         }
 
-        tempEntryIterator = tempConflictMap.entrySet().iterator();
         // 处理都是新占用电梯的情况：找出冲突中剩余路线时长最长的座位赢家，其他为失败者
+        multipleMap = new HashMap<>();
+        tempEntryIterator = tempConflictMap.entrySet().iterator();
         while (tempEntryIterator.hasNext()) {
             tempAnchorEntitySetEntry = tempEntryIterator.next();
             maxLength = 0;
@@ -358,16 +359,16 @@ public class Tools {
                     winnerPath = tempPathStructure;
                 }
             }
-            winnerMap.put(tempAnchorEntity, winnerPath);
             failurePathStructureSet = new HashSet<>(tempPathStructureSet);
             failurePathStructureSet.remove(winnerPath);
-            failureMap.put(tempAnchorEntity, failurePathStructureSet);
+            multipleMap.put(tempAnchorEntity, new BasicPair<>(winnerPath, failurePathStructureSet));
         }
-        return new CompeteStructure(singleFirstElevatorOccupationMap, winnerMap, failureMap);
+        return new CompeteStructure(singleFirstElevatorOccupationMap, multipleMap, alreadyMap);
     }
 
     /**
      * 计算被当前path占用给定的entity的剩余时间数,设计保证了该值不小于0
+     * 仅适用于之前就已占用了电梯的情况
      * @param timePointPath
      * @param entity
      * @param startIndex
@@ -399,42 +400,121 @@ public class Tools {
         return new BasicPair<>(remainTimeSlots, layer);
     }
 
-
-    protected static Map<SortedPathStructure<TimePointPath>, Integer> getWaitingTimeSet(Map<AnchorEntity, SortedPathStructure<TimePointPath>> winnerPathMap, Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> failurePathSetMap, Integer currentTimeIndex) {
-        Map<SortedPathStructure<TimePointPath>, Integer> result = new HashMap<>();
+    /**
+     * 1. 处理单个首次电梯请求
+     * 2. 处理多个首次电梯请求冲突
+     * 3. 处理一个早已占用电梯+多个首次电梯请求冲突
+     * 4. 处理其他冲突
+     * @param currentTimeIndex
+     * @return 每个需要延后的路径对应的 pair(是否成功占用该电梯，顺延多少个时刻)
+     * 这里不会记录那些在上个时刻就已经占用电梯的路线
+     * 因此如果pair的key是true，那表示这个路线是单个首次占用电梯的路线或者是多个首次占用电梯路线的胜利者
+     */
+    protected static Map<SortedPathStructure<TimePointPath>, BasicPair<Boolean, Integer>> getWaitingTimeSet(CompeteStructure competeStructure, Integer currentTimeIndex) {
+        Map<AnchorEntity, SortedPathStructure<TimePointPath>> singleMap = competeStructure.getSingleFirstElevatorRequirementMap();
+        Map<AnchorEntity, BasicPair<SortedPathStructure<TimePointPath>, Set<SortedPathStructure<TimePointPath>>>> multipleMap = competeStructure.getMultipleFirstRequirementMap();
+        Map<AnchorEntity, BasicPair<SortedPathStructure<TimePointPath>, Set<SortedPathStructure<TimePointPath>>>> alreadyMap = competeStructure.getAlreadyOccupiedMap();
+        Map<SortedPathStructure<TimePointPath>, BasicPair<Boolean, Integer>> result = new HashMap<>();
         AnchorEntity tempAnchorEntity;
         Anchor tempAnchor;
         Entity tempEntity;
-        SortedPathStructure<TimePointPath> winnerSortedPathStructure;
+        SortedPathStructure<TimePointPath> tempWinnerPathStructure, singleSortedPathStructure;
         Set<SortedPathStructure<TimePointPath>> failurePathSet;
         TimePointPath winnerTimePointPath;
         BasicPair<Integer, Integer> timeSlotsLayerPair;
         Integer remainOccupiedTimeSlots;
-        Integer tempWaitedTimeSlots;
+        Integer tempWaitedTimeSlots, winnerWaitedTimeSlot, failureWaitedTimeSlot;
         Integer tempLastLayer, targetLayer;
-        for (Map.Entry<AnchorEntity, SortedPathStructure<TimePointPath>> winnerEntry : winnerPathMap.entrySet()) {
-            tempAnchorEntity = winnerEntry.getKey();
+        BasicPair<SortedPathStructure<TimePointPath>, Set<SortedPathStructure<TimePointPath>>> tempPair;
+        Set<SortedPathStructure<TimePointPath>> tempFailurePathStructureSet;
+        /**
+         * 1. 处理单个首次申请电梯的请求
+         *    (1) 要求此刻启动电梯
+         *    (2) 添加电梯占用时刻数为电梯到达请求层的耗时数
+         *    (3) 忽略添加后不再是top 1 情况的影响
+         */
+
+        for (Map.Entry<AnchorEntity, SortedPathStructure<TimePointPath>> entry : singleMap.entrySet()) {
+            tempAnchorEntity = entry.getKey();
+            singleSortedPathStructure = entry.getValue();
+            Elevator elevator = (Elevator) tempAnchorEntity.getEntity();
+            tempLastLayer = elevator.getCurrentLayer(currentTimeIndex);
+            // 保证0时刻不会有电梯的请求
+            Anchor beforeAnchor = singleSortedPathStructure.getFirst().getAnchorEntityByIndex(currentTimeIndex - 1).getAnchor();
+            targetLayer = BasicFunctions.getLayer(beforeAnchor.getLocation());
+            // 征用电梯会带来一次电梯开门和一次电梯关门的消耗
+            tempWaitedTimeSlots = BasicFunctions.getElevatorRunningTimeAndOpeningCloseDoorSlots(tempLastLayer, targetLayer, elevator.getVelocity(), Constant.OpenOrCloseDoorTimeCost, Constant.OpenOrCloseDoorTimeCost);
+            result.put(singleSortedPathStructure, new BasicPair<>(true, tempWaitedTimeSlots));
+        }
+        /**
+         * 2. 处理同时多方首次占用某个实体的请求
+         */
+        for (Map.Entry<AnchorEntity, BasicPair<SortedPathStructure<TimePointPath>, Set<SortedPathStructure<TimePointPath>>>> entry : multipleMap.entrySet()) {
+            tempAnchorEntity = entry.getKey();
+            tempPair = entry.getValue();
+            tempWinnerPathStructure = tempPair.getKey();
+            tempFailurePathStructureSet = tempPair.getValue();
+            tempAnchor = tempAnchorEntity.getAnchor();
             tempEntity = tempAnchorEntity.getEntity();
-            winnerSortedPathStructure = winnerEntry.getValue();
-            winnerTimePointPath = winnerSortedPathStructure.getFirst();
+            winnerTimePointPath = tempWinnerPathStructure.getFirst();
+            timeSlotsLayerPair = getRemainingOccupiedTimeSlotsAndStopLayer(winnerTimePointPath, tempEntity, currentTimeIndex);
+            remainOccupiedTimeSlots = timeSlotsLayerPair.getKey();
+            if (tempEntity instanceof Elevator) {
+                Elevator elevator = (Elevator) tempEntity;
+                tempLastLayer = elevator.getCurrentLayer(currentTimeIndex);
+                targetLayer = BasicFunctions.getLayer(tempAnchor.getLocation());
+                // 成功者等待时间=电梯回来时间（开关门时间已经算在时间扩展图里面了）
+                winnerWaitedTimeSlot = BasicFunctions.getElevatorRunningTimeSlots(tempLastLayer, targetLayer, elevator.getVelocity());
+                result.put(tempWinnerPathStructure, new BasicPair<>(true, winnerWaitedTimeSlot));
+                // 失败者等待时间=成功者等待时间(+成功者上电梯时间，忽略掉)+电梯送成功者到站时间+一次开门时间+一次关门时间+回来时间（其他开门时间已经算在时间扩展图里面了）
+                tempLastLayer = targetLayer;
+                for (SortedPathStructure<TimePointPath> failurePathStructure : tempFailurePathStructureSet) {
+                    AnchorEntity failureAnchorEntity = failurePathStructure.getFirst().getAnchorEntityByIndex(currentTimeIndex);
+                    targetLayer = BasicFunctions.getLayer(failureAnchorEntity.getAnchor().getLocation());
+                    failureWaitedTimeSlot = winnerWaitedTimeSlot + remainOccupiedTimeSlots + BasicFunctions.getElevatorRunningTimeSlots(tempLastLayer, targetLayer, elevator.getVelocity());
+                    result.put(failurePathStructure, new BasicPair<>(false, failureWaitedTimeSlot));
+                }
+            } else {
+                failureWaitedTimeSlot = remainOccupiedTimeSlots;
+                for (SortedPathStructure<TimePointPath> failurePathStructure : tempFailurePathStructureSet) {
+                    result.put(failurePathStructure, new BasicPair<>(false, failureWaitedTimeSlot));
+                }
+            }
+        }
+
+
+        /**
+         * 3. 处理胜利者在前一时刻已经占用某个实体的请求
+         */
+        // 处理早已率先占用实体的情况
+        for (Map.Entry<AnchorEntity, BasicPair<SortedPathStructure<TimePointPath>, Set<SortedPathStructure<TimePointPath>>>> entry : alreadyMap.entrySet()) {
+            tempAnchorEntity = entry.getKey();
+            tempEntity = tempAnchorEntity.getEntity();
+            tempPair = entry.getValue();
+            tempWinnerPathStructure = tempPair.getKey();
+            winnerTimePointPath = tempWinnerPathStructure.getFirst();
+            tempFailurePathStructureSet = tempPair.getValue();
             timeSlotsLayerPair = getRemainingOccupiedTimeSlotsAndStopLayer(winnerTimePointPath, tempEntity, currentTimeIndex);
             remainOccupiedTimeSlots = timeSlotsLayerPair.getKey();
             tempAnchor = tempAnchorEntity.getAnchor();
             if (tempEntity instanceof Elevator) {
                 Elevator elevator = (Elevator) tempEntity;
                 tempLastLayer = timeSlotsLayerPair.getValue();
-                targetLayer = BasicFunctions.getLayer(tempAnchor.getLocation());
-                // 计算电梯被占用的等待时间
-                tempWaitedTimeSlots = remainOccupiedTimeSlots + BasicFunctions.getElevatorRunningTimeSlots(tempLastLayer, targetLayer, elevator.getVelocity());
+                for (SortedPathStructure<TimePointPath> failurePathStructure : tempFailurePathStructureSet) {
+                    AnchorEntity failureAnchorEntity = failurePathStructure.getFirst().getAnchorEntityByIndex(currentTimeIndex);
+                    targetLayer = BasicFunctions.getLayer(failureAnchorEntity.getAnchor().getLocation());
+                    failureWaitedTimeSlot = remainOccupiedTimeSlots + BasicFunctions.getElevatorRunningTimeSlots(tempLastLayer, targetLayer, elevator.getVelocity());
+                    result.put(failurePathStructure, new BasicPair<>(false, failureWaitedTimeSlot));
+                }
             } else {
                 // 计算当前楼梯或锚点被占用的等待时间
-                tempWaitedTimeSlots = remainOccupiedTimeSlots;
-            }
-            failurePathSet = failurePathSetMap.get(tempAnchorEntity);
-            for (SortedPathStructure<TimePointPath> pathStructure : failurePathSet) {
-                result.put(pathStructure, tempWaitedTimeSlots);
+                failureWaitedTimeSlot = remainOccupiedTimeSlots;
+                for (SortedPathStructure<TimePointPath> failurePathStructure : tempFailurePathStructureSet) {
+                    result.put(failurePathStructure, new BasicPair<>(false, failureWaitedTimeSlot));
+                }
             }
         }
+
         return result;
     }
 
@@ -460,14 +540,14 @@ public class Tools {
 
 
 
-    protected static Integer eliminate(Map<BasicPair<Task, Robot>, SortedPathStructure<TimePointPath>> temporalPathMap) {
+    protected static Integer eliminate(Map<BasicPair<Task, Robot>, SortedPathStructure<TimePointPath>> temporalPathMap, Collection<Elevator> elevators) {
         Integer maximumPathLength = getMaximumSpatialPathLength(temporalPathMap.values());
         Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> conflictMapWithSingleElevatorProposal;
         Boolean flag = false;
         BasicPair<Map<AnchorEntity, SortedPathStructure<TimePointPath>>, Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>>> winFailurePair;
-        Map<AnchorEntity, SortedPathStructure<TimePointPath>> winnerMatch;
-        Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> failureMatch;
-        Map<SortedPathStructure<TimePointPath>, Integer> waitingTimeSet;
+        Map<AnchorEntity, BasicPair<SortedPathStructure<TimePointPath>, Set<SortedPathStructure<TimePointPath>>>> multipleMap;
+        Map<AnchorEntity, BasicPair<SortedPathStructure<TimePointPath>, Set<SortedPathStructure<TimePointPath>>>> alreadyMap;
+        Map<SortedPathStructure<TimePointPath>, BasicPair<Boolean, Integer>> waitingTimeSet;
         CompeteStructure tempCompeteStructure;
         Map<AnchorEntity, SortedPathStructure<TimePointPath>> singleFirstElevatorOccupationMap;
         for (int i = 0; i < maximumPathLength; ++i) {
@@ -477,17 +557,27 @@ public class Tools {
 //            }
             tempCompeteStructure = getWinnerAndFailureMatch(conflictMapWithSingleElevatorProposal, i);
 
-            singleFirstElevatorOccupationMap = tempCompeteStructure.getSingleFirstElevatorOccupationMap();
-            winnerMatch = tempCompeteStructure.getWinnerMap();
-            failureMatch = tempCompeteStructure.getFailureMap();
+//            singleFirstElevatorOccupationMap = tempCompeteStructure.getSingleFirstElevatorRequirementMap();
+//            multipleMap = tempCompeteStructure.getMultipleFirstRequirementMap();
+//            alreadyMap = tempCompeteStructure.getAlreadyOccupiedMap();
             // todo: 分别处理单个首次电梯请求、冲突
-            waitingTimeSet = getWaitingTimeSet(winnerMatch, failureMatch, i);
+            /**
+             * 要求getWaitingTimeSet和delayAndUpdate两个能合力处理下面情况
+             *  1. 处理单个首次电梯请求
+             *  2. 处理多个首次电梯请求冲突
+             *  3. 处理一个早已占用电梯+多个首次电梯请求冲突
+             *  4. 处理其他冲突
+             */
+            waitingTimeSet = getWaitingTimeSet(tempCompeteStructure, i);
             flag = delayAndUpdate(waitingTimeSet, i);
             if (!conflictMapWithSingleElevatorProposal.isEmpty()) {
                 maximumPathLength = BasicFunctions.getMaximalTimeSlotLength(waitingTimeSet.keySet());
             }
             if (flag) {
                 i = 0;
+                Elevator.batchResetElevators(elevators);
+            } else {
+                Elevator.batchUpdateElevators(elevators);
             }
         }
         return maximumPathLength;
