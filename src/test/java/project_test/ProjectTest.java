@@ -35,6 +35,7 @@ public class ProjectTest {
     public static Map<String, List<Robot>> robotTypeMap;
     public static Map<String, TimeWeightedGraph> robotTypeTimeWeightedGraphMap;
     public static Map<String, List<Anchor>> stringAnchorListMap;
+    public static List<Elevator> elevatorList;
     public static AnchorEntityConvertor anchorEntityConvertor;
     public static Job job;
 
@@ -84,6 +85,16 @@ public class ProjectTest {
 
     }
 
+    public static void initializeElevators() {
+        elevatorList = new ArrayList<>();
+        Entity entity;
+        for (Map.Entry<String, Entity> entry : entityMap.entrySet()) {
+            if (entry.getKey().startsWith("L")) {
+                elevatorList.add((Elevator) entry.getValue());
+            }
+        }
+    }
+
     public static void initializeSimpleGraph() {
         PropertiesRead propertiesRead = new PropertiesRead(TestDataPath + "/location.properties");
         entityMap = new HashMap<>();
@@ -94,7 +105,9 @@ public class ProjectTest {
             if (entityName.startsWith("L")) {
                 PlaneLocation location = new PlaneLocation(value, PropertiesSplitTag);
                 locationMap.put(entityName, location);
-                entityMap.put(entityName, new Elevator(entityName, Constant.ElevatorAverageVelocity, Constant.OpenOrCloseDoorTimeCost, LayerSize, location));
+                entityMap.put(entityName, new Elevator(entityName, Constant.ElevatorAverageVelocity,
+                        Constant.OpenOrCloseDoorTimeCost, LayerSize, Constant.NeighboringLayersDistance,
+                        location, Constant.DefaultStartLayer));
             } else if (entityName.startsWith("S")) {
                 PlaneLocation location = new PlaneLocation(value, PropertiesSplitTag);
                 locationMap.put(entityName, location);
@@ -153,6 +166,7 @@ public class ProjectTest {
         initializeSimpleGraph();
         initializeRobotTypeMap();
         initializeJob();
+        initializeElevators();
         initializeTimeWeightedGraphMap();
         TimeWeightedGraph timeWeightedGraph = robotTypeTimeWeightedGraphMap.values().iterator().next();
         initializeStringAnchorListMapByAnyTimeWeightedGraph(timeWeightedGraph);
@@ -217,7 +231,7 @@ public class ProjectTest {
         for (List<Robot> tempRobotList : robotTypeMap.values()) {
             robotList.addAll(tempRobotList);
         }
-        Match planPath = Tools.getPlanPath(timeGraphMap, robotList, job, anchorEntityConvertor);
+        Match planPath = Tools.getPlanPath(timeGraphMap, robotList, job, elevatorList, anchorEntityConvertor);
         System.out.println(planPath);
     }
 

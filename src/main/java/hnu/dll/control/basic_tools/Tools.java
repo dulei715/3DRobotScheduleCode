@@ -518,19 +518,36 @@ public class Tools {
         return result;
     }
 
-    protected static boolean delayAndUpdate(Map<SortedPathStructure<TimePointPath>, Integer> timeWaitedMap, Integer startTime) {
+    protected static boolean delayAndUpdate(Map<SortedPathStructure<TimePointPath>, BasicPair<Boolean, Integer>> timeWaitedMap, Integer startTime) {
         SortedPathStructure<TimePointPath> tempStructure;
         TimePointPath tempPath;
         Integer tempDelaySlots;
-        AnchorEntity tempLastAnchorEntity;
+        AnchorEntity tempLastAnchorEntity, tempCurrentAnchorEntity;
+        BasicPair<Boolean, Integer> tempPair;
+        Boolean tempStatus;
         boolean flag = false;
-        for (Map.Entry<SortedPathStructure<TimePointPath>, Integer> entry : timeWaitedMap.entrySet()) {
+        /**
+         * 遍历所有的路径结构：
+         * 1. boolean值为true的表示单个首次占用或多个首次占用的胜利者，他们占用当前实体（只有电梯的情况），并延续相应时间
+         * 2. boolean值为false的表示失败者，要顺延前一时刻的位置
+         */
+        for (Map.Entry<SortedPathStructure<TimePointPath>, BasicPair<Boolean, Integer>> entry : timeWaitedMap.entrySet()) {
             tempStructure = entry.getKey();
             tempPath = tempStructure.getFirst();
-            tempDelaySlots = entry.getValue();
-            // 假设一开始的0时刻没有冲突
-            tempLastAnchorEntity = tempPath.getAnchorEntityByIndex(startTime - 1);
-            tempPath.insertAnchorEntity(tempLastAnchorEntity, startTime, tempDelaySlots);
+            tempPair = entry.getValue();
+            tempStatus = tempPair.getKey();
+            tempDelaySlots = tempPair.getValue();
+            if (tempStatus) {
+                // 处理胜利者的时延
+                tempCurrentAnchorEntity = tempPath.getAnchorEntityByIndex(startTime);
+                // 这里从当前时间点插或从者后一个时间都可以，因为插的是同一个电梯
+                tempPath.insertAnchorEntity(tempCurrentAnchorEntity, startTime, tempDelaySlots);
+            } else {
+                // 处理失败者的时延
+                // 假设一开始的0时刻没有冲突
+                tempLastAnchorEntity = tempPath.getAnchorEntityByIndex(startTime - 1);
+                tempPath.insertAnchorEntity(tempLastAnchorEntity, startTime, tempDelaySlots);
+            }
             if (tempPath != tempStructure.getFirst()) {
                 flag = true;
             }
@@ -590,7 +607,7 @@ public class Tools {
      * @param job
      * @return
      */
-    public static Match getPlanPath(Map<String, TimeWeightedGraph> timeGraphMap, List<Robot> robotList, Job job, AnchorEntityConvertor convert) {
+    public static Match getPlanPath(Map<String, TimeWeightedGraph> timeGraphMap, List<Robot> robotList, Job job, Collection<Elevator> elevatorCollection, AnchorEntityConvertor convert) {
         Map<BasicPair<Task,Robot>, SortedPathStructure<TimePointPath>> result;
         job.initialTaskStartTimeAndEndTime();
         List<Task> taskList = job.getTaskList();
@@ -601,7 +618,7 @@ public class Tools {
         AnchorPointPath tempAnchorPointPath;
         TimePointPath tempTimePointPath;
         result = toTimePointSortedPath(matchMapBasicPair);
-        eliminate(result);
+        eliminate(result, elevatorCollection);
         Match match = new Match();
 
         for (Map.Entry<BasicPair<Task, Robot>, SortedPathStructure<TimePointPath>> entry : result.entrySet()) {
