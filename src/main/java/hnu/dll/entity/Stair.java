@@ -2,22 +2,23 @@ package hnu.dll.entity;
 
 import hnu.dll.basic_entity.location.PlaneLocation;
 import hnu.dll.basic_entity.location.ThreeDLocation;
+import hnu.dll.structure.Building;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Stair extends Entity {
 
+    private Building building;
     private PlaneLocation planeLocation;
-    private Integer layerSize;
     // 所有层及其转弯节点包含底部和顶部
     private List<ThreeDLocation> innerNodeList;
     private Double segmentLength;
 
-    public Stair(String name, PlaneLocation planeLocation, Integer layerSize, List<ThreeDLocation> innerNodeList, Double segmentLength) {
+    public Stair(String name, Building building, PlaneLocation planeLocation, List<ThreeDLocation> innerNodeList, Double segmentLength) {
         super(name);
+        this.building = building;
         this.planeLocation = planeLocation;
-        this.layerSize = layerSize;
         this.innerNodeList = innerNodeList;
         this.segmentLength = segmentLength;
     }
@@ -42,7 +43,7 @@ public class Stair extends Entity {
     }
 
     public Integer getLayerSize() {
-        return layerSize;
+        return this.building.getLayerSize();
     }
 
     public List<ThreeDLocation> getInnerNodeList() {
@@ -60,7 +61,7 @@ public class Stair extends Entity {
                 ", location='" + planeLocation +
                 ", innerNodeList=" + innerNodeList +
                 ", segmentLength=" + segmentLength +
-                ", layerSize=" + layerSize + '\'' +
+                ", layerSize=" + building.getLayerSize() + '\'' +
                 '}';
     }
 //    public String toString() {

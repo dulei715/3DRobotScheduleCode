@@ -3,6 +3,7 @@ package hnu.dll.entity;
 import hnu.dll.basic_entity.location.PlaneLocation;
 import hnu.dll.config.Constant;
 import hnu.dll.control.BasicFunctions;
+import hnu.dll.structure.Building;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,11 +14,13 @@ import java.util.List;
  */
 public class Elevator extends Entity {
 
+    private Building building;
+
     private Double velocity;
     private Double openingOrCloseTimeCost;
 
-    private Integer layerSize;
-    private Double averageLayerHeight;
+//    private Integer layerSize;
+//    private Double averageLayerHeight;
     private PlaneLocation planeLocation;
 
     private Integer originalStartLayer;
@@ -35,7 +38,7 @@ public class Elevator extends Entity {
 
 
     public Double getCrossFloorRunningTime(Integer startLayer, Integer endLayer) {
-        return Math.abs(endLayer - startLayer) * averageLayerHeight / this.velocity;
+        return Math.abs(endLayer - startLayer) * building.getAverageLayerHeight() / this.velocity;
     }
 
 //    public void setMoveDoubleLayerEachTimeSlot(Integer startLayer, Integer endLayer) {
@@ -44,12 +47,13 @@ public class Elevator extends Entity {
 //    }
 
 
-    public Elevator(String name, Double velocity, Double openingOrCloseTimeCost, Integer layerSize, Double averageLayerHeight, PlaneLocation planeLocation, Integer originalStartLayer) {
+    public Elevator(String name, Building building, Double velocity, Double openingOrCloseTimeCost, PlaneLocation planeLocation, Integer originalStartLayer) {
         super(name);
+        this.building = building;
         this.velocity = velocity;
         this.openingOrCloseTimeCost = openingOrCloseTimeCost;
-        this.layerSize = layerSize;
-        this.averageLayerHeight = averageLayerHeight;
+//        this.layerSize = layerSize;
+//        this.averageLayerHeight = averageLayerHeight;
         this.planeLocation = planeLocation;
         this.originalStartLayer = originalStartLayer;
         resetElevator();
@@ -77,7 +81,7 @@ public class Elevator extends Entity {
     }
 
     public Integer getLayerSize() {
-        return layerSize;
+        return this.building.getLayerSize();
     }
 
     public PlaneLocation getPlaneLocation() {

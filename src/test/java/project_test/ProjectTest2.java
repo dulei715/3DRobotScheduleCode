@@ -13,6 +13,7 @@ import hnu.dll.control.basic_tools.Tools;
 import hnu.dll.control.topk.AnchorEntityConvertor;
 import hnu.dll.control.topk.AnchorEntityTransform;
 import hnu.dll.entity.*;
+import hnu.dll.structure.Building;
 import hnu.dll.structure.SortedPathStructure;
 import hnu.dll.structure.TimeWeightedGraph;
 import hnu.dll.structure.basic_structure.Anchor;
@@ -27,7 +28,8 @@ import java.util.*;
 
 public class ProjectTest2 {
     public static final String PropertiesSplitTag = ",";
-    public static final Integer LayerSize = 2;
+//    public static final Integer LayerSize = 2;
+    public static List<Building> buildingList;
     public static final String TestDataPath = ConstantValues.ProjectDir + "/src/test/resources/data";
     public static Map<String, Location> locationMap;
     public static Map<String, Entity> entityMap;
@@ -85,6 +87,14 @@ public class ProjectTest2 {
 
     }
 
+    public static void initializeBuildings() {
+        buildingList = new ArrayList<>();
+        String buildingName = "Building-1";
+        Integer layerSize = 2;
+        Building building = new Building(buildingName, layerSize, Constant.NeighboringLayersDistance);
+        buildingList.add(building);
+    }
+
     public static void initializeElevators() {
         elevatorList = new ArrayList<>();
         Entity entity;
@@ -97,6 +107,7 @@ public class ProjectTest2 {
 
     public static void initializeSimpleGraph() {
         PropertiesRead propertiesRead = new PropertiesRead(TestDataPath + "/location.properties");
+        Building building = buildingList.get(0);
         entityMap = new HashMap<>();
         locationMap = new HashMap<>();
         for (Map.Entry<Object, Object> entry : propertiesRead.getEntrySet()) {
@@ -105,14 +116,14 @@ public class ProjectTest2 {
             if (entityName.startsWith("L")) {
                 PlaneLocation location = new PlaneLocation(value, PropertiesSplitTag);
                 locationMap.put(entityName, location);
-                entityMap.put(entityName, new Elevator(entityName, Constant.ElevatorAverageVelocity,
-                        Constant.OpenOrCloseDoorTimeCost, LayerSize, Constant.NeighboringLayersDistance,
+                entityMap.put(entityName, new Elevator(entityName, building, Constant.ElevatorAverageVelocity,
+                        Constant.OpenOrCloseDoorTimeCost,
                         location, Constant.DefaultStartLayer));
             } else if (entityName.startsWith("S")) {
                 PlaneLocation location = new PlaneLocation(value, PropertiesSplitTag);
                 locationMap.put(entityName, location);
-                List<ThreeDLocation> locationList = Stair.getDefaultInnerNodeList(location, 0D, Constant.NeighboringLayersDistance, LayerSize);
-                entityMap.put(entityName, new Stair(entityName, location, LayerSize, locationList, Constant.NeighboringLayersDistance / 2 / Math.sin(Constant.stairAngle)));
+                List<ThreeDLocation> locationList = Stair.getDefaultInnerNodeList(location, 0D, Constant.NeighboringLayersDistance, building.getLayerSize());
+                entityMap.put(entityName, new Stair(entityName, building, location, locationList, Constant.NeighboringLayersDistance / 2 / Math.sin(Constant.stairAngle)));
             } else {
                 ThreeDLocation location = new ThreeDLocation(value, PropertiesSplitTag);
                 locationMap.put(entityName, location);
@@ -163,6 +174,7 @@ public class ProjectTest2 {
 
     @BeforeClass
     public static void initialize() {
+        initializeBuildings();
         initializeSimpleGraph();
         initializeRobotTypeMap();
         initializeJob();
