@@ -3,6 +3,8 @@ package hnu.dll.structure;
 import hnu.dll.entity.Entity;
 import hnu.dll.structure.basic_structure.Anchor;
 
+import java.util.Objects;
+
 public class AnchorEntity implements Comparable<AnchorEntity>{
     private Anchor anchor;
     private Entity entity;
@@ -41,5 +43,17 @@ public class AnchorEntity implements Comparable<AnchorEntity>{
         return "[" + anchor +
                 ", " + entity.getName() +
                 ']';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        AnchorEntity that = (AnchorEntity) o;
+        return Objects.equals(anchor, that.anchor);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(anchor);
     }
 }

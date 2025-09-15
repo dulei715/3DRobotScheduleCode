@@ -105,14 +105,13 @@ public class Tools {
                 timeWeightedGraph.addElement(anchorB, anchorA, time);
             }
 
-            // 遍历与电梯相连的节点，将这些节点关联到相应的扩展点，并将权重加入结果图中
+            // 遍历与楼梯相连的节点，将这些节点关联到相应的扩展点，并将权重加入结果图中
             nextNodeAndWeight = originalGraph.getNextNodeAndWeight(entity);
             for (Map.Entry<Entity, Double> entityDoubleEntry : nextNodeAndWeight.entrySet()) {
                 tempEntity = entityDoubleEntry.getKey();
-                // 假设电梯只会和普通节点相连
+                // 假设楼梯只会和普通节点相连
                 anchorB = (Anchor) tempEntity;
                 anchorA = layersAnchorList.get((BasicUtils.getLayer(anchorB.getLocation().getzIndex()) - 1) * 2);
-                // 包括开关电梯门的时间
                 tempWeight = entityDoubleEntry.getValue() / robot.getFlatGroundVelocity();
                 timeWeightedGraph.addElement(anchorA, anchorB, tempWeight);
                 timeWeightedGraph.addElement(anchorB, anchorA, tempWeight);
@@ -250,6 +249,9 @@ public class Tools {
         Map.Entry<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> next;
         for (SortedPathStructure<TimePointPath> pathStructure : temporalPathSet) {
             tempPath = pathStructure.getFirst();
+            if (timeSlot >= tempPath.getTimeLength()) {
+                continue;
+            }
             tempAnchorEntity = tempPath.getAnchorEntityByIndex(timeSlot);
             result.computeIfAbsent(tempAnchorEntity, k->new HashSet<>()).add(pathStructure);
 //            tempSet = result.getOrDefault(tempAnchorEntity, new HashSet<>());
@@ -545,6 +547,7 @@ public class Tools {
             } else {
                 // 处理失败者的时延
                 // 假设一开始的0时刻没有冲突
+//                System.out.println("有冲突");
                 tempLastAnchorEntity = tempPath.getAnchorEntityByIndex(startTime - 1);
                 tempPath.insertAnchorEntity(tempLastAnchorEntity, startTime, tempDelaySlots);
             }
