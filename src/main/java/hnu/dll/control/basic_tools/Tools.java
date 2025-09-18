@@ -74,8 +74,9 @@ public class Tools {
                 // 假设电梯只会和普通节点相连
                 anchorB = (Anchor) tempEntity;
                 anchorA = layersAnchorList.get(BasicUtils.getLayer(anchorB.getLocation().getzIndex()) - 1);
-                // 包括开关电梯门的时间
-                tempWeight = entityDoubleEntry.getValue() / robot.getFlatGroundVelocity() + 2 * elevator.getOpeningOrCloseTimeCost();
+//                tempWeight = entityDoubleEntry.getValue() / robot.getFlatGroundVelocity() + 2 * elevator.getOpeningOrCloseTimeCost();
+                // 不包括开关电梯门的时间
+                tempWeight = entityDoubleEntry.getValue() / robot.getFlatGroundVelocity();
                 timeWeightedGraph.addElement(anchorA, anchorB, tempWeight);
                 timeWeightedGraph.addElement(anchorB, anchorA, tempWeight);
             }
@@ -445,7 +446,8 @@ public class Tools {
             Anchor beforeAnchor = singleSortedPathStructure.getFirst().getAnchorEntityByIndex(currentTimeIndex - 1).getAnchor();
             targetLayer = BasicFunctions.getLayer(beforeAnchor.getLocation());
             // 征用电梯会带来一次电梯开门和一次电梯关门的消耗
-            tempWaitedTimeSlots = BasicFunctions.getElevatorRunningTimeAndOpeningCloseDoorSlots(tempLastLayer, targetLayer, elevator.getVelocity(), Constant.OpenOrCloseDoorTimeCost, Constant.OpenOrCloseDoorTimeCost);
+//            tempWaitedTimeSlots = BasicFunctions.getElevatorRunningTimeAndOpeningCloseDoorSlots(tempLastLayer, targetLayer, elevator.getVelocity(), Constant.OpenOrCloseDoorTimeCost, Constant.OpenOrCloseDoorTimeCost);
+            tempWaitedTimeSlots = BasicFunctions.getElevatorRunningTimeAndOpeningCloseDoorSlots(tempLastLayer, targetLayer, elevator.getVelocity(), Constant.OpenOrCloseDoorTimeCost, 3);
             result.put(singleSortedPathStructure, new BasicPair<>(true, tempWaitedTimeSlots));
         }
         /**
@@ -466,15 +468,16 @@ public class Tools {
                 Elevator elevator = (Elevator) tempEntity;
                 tempLastLayer = elevator.getCurrentLayer(currentTimeIndex);
                 targetLayer = BasicFunctions.getLayer(tempAnchor.getLocation());
-                // 成功者等待时间=电梯回来时间（开关门时间已经算在时间扩展图里面了）
-                winnerWaitedTimeSlot = BasicFunctions.getElevatorRunningTimeSlots(tempLastLayer, targetLayer, elevator.getVelocity());
+                // 成功者等待时间=电梯回来时间+3次电梯门时间
+//                winnerWaitedTimeSlot = BasicFunctions.getElevatorRunningTimeSlots(tempLastLayer, targetLayer, elevator.getVelocity());
+                winnerWaitedTimeSlot = BasicFunctions.getElevatorRunningTimeAndOpeningCloseDoorSlots(tempLastLayer, targetLayer, elevator.getVelocity(), Constant.ElevatorAverageVelocity, 3);
                 result.put(tempWinnerPathStructure, new BasicPair<>(true, winnerWaitedTimeSlot));
-                // 失败者等待时间=成功者等待时间(+成功者上电梯时间，忽略掉)+电梯送成功者到站时间+一次开门时间+一次关门时间+回来时间（其他开门时间已经算在时间扩展图里面了）
+                // 失败者等待时间=成功者等待时间+电梯送成功者到站时间+一次关门时间+回来时间+三次电梯门时间
                 tempLastLayer = targetLayer;
                 for (SortedPathStructure<TimePointPath> failurePathStructure : tempFailurePathStructureSet) {
                     AnchorEntity failureAnchorEntity = failurePathStructure.getFirst().getAnchorEntityByIndex(currentTimeIndex);
                     targetLayer = BasicFunctions.getLayer(failureAnchorEntity.getAnchor().getLocation());
-                    failureWaitedTimeSlot = winnerWaitedTimeSlot + remainOccupiedTimeSlots + BasicFunctions.getElevatorRunningTimeSlots(tempLastLayer, targetLayer, elevator.getVelocity());
+                    failureWaitedTimeSlot = winnerWaitedTimeSlot + remainOccupiedTimeSlots + BasicFunctions.getElevatorRunningTimeAndOpeningCloseDoorSlots(tempLastLayer, targetLayer, elevator.getVelocity(), Constant.OpenOrCloseDoorTimeCost, 4);
                     result.put(failurePathStructure, new BasicPair<>(false, failureWaitedTimeSlot));
                 }
             } else {

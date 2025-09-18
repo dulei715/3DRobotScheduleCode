@@ -28,8 +28,8 @@ public class BasicFunctions {
         Double realTime = (endLayer - startLayer) * Constant.NeighboringLayersDistance / averageRunningVelocity;
         return BasicUtils.toUnitTimeShareSize(realTime);
     }
-    public static Integer getElevatorRunningTimeAndOpeningCloseDoorSlots(Integer startLayer, Integer endLayer, Double averageRunningVelocity, Double openingDoorTime, Double closeDoorTime) {
-        Double realTime = (endLayer - startLayer) * Constant.NeighboringLayersDistance / averageRunningVelocity + openingDoorTime + closeDoorTime;
+    public static Integer getElevatorRunningTimeAndOpeningCloseDoorSlots(Integer startLayer, Integer endLayer, Double averageRunningVelocity, Double openingOrCloseDoorTime, Integer doorExecuteTimes) {
+        Double realTime = (endLayer - startLayer) * Constant.NeighboringLayersDistance / averageRunningVelocity + openingOrCloseDoorTime * doorExecuteTimes;
         return BasicUtils.toUnitTimeShareSize(realTime);
     }
 
