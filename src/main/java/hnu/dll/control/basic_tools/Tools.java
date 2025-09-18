@@ -450,6 +450,7 @@ public class Tools {
         }
         /**
          * 2. 处理同时多方首次占用某个实体的请求
+         * todo: 更正：时间扩张图不要包含电梯开关门，电梯开关门只在请求电梯时计算
          */
         for (Map.Entry<AnchorEntity, BasicPair<SortedPathStructure<TimePointPath>, Set<SortedPathStructure<TimePointPath>>>> entry : multipleMap.entrySet()) {
             tempAnchorEntity = entry.getKey();
