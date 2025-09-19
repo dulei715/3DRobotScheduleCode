@@ -8,9 +8,7 @@ import hnu.dll.entity.Stair;
 import hnu.dll.structure.basic_structure.Anchor;
 import hnu.dll.structure.graph.SimpleGraph;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class DatasetStructure {
     private SimpleGraph simpleGraph;
@@ -45,5 +43,28 @@ public class DatasetStructure {
 
     public Set<PlaneLocation> getPlaneLocationSet() {
         return planeLocationSet;
+    }
+
+    public void combine(DatasetStructure datasetStructure) {
+        this.simpleGraph.combine(datasetStructure.getSimpleGraph());
+
+        LinkedHashSet<Anchor> anchorSet = new LinkedHashSet<>();
+        anchorSet.addAll(this.anchorList);
+        anchorSet.addAll(datasetStructure.anchorList);
+        this.anchorList = new ArrayList<>(anchorSet);
+
+        LinkedHashSet<Elevator> elevatorSet = new LinkedHashSet<>();
+        elevatorSet.addAll(this.elevatorList);
+        elevatorSet.addAll(datasetStructure.elevatorList);
+        this.elevatorList = new ArrayList<>(elevatorSet);
+
+        LinkedHashSet<Stair> stairSet = new LinkedHashSet<>();
+        stairSet.addAll(this.stairList);
+        stairSet.addAll(datasetStructure.stairList);
+        this.stairList = new ArrayList<>(stairSet);
+
+        this.planeLocationSet.addAll(datasetStructure.planeLocationSet);
+
+
     }
 }

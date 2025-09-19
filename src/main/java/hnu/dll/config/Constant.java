@@ -41,4 +41,9 @@ public class Constant {
 
     // for Stair
     public static final Double DefaultStairAngle = Math.PI / 6;  // 设置楼梯仰角30度
+
+    // for Building
+    public static final Double buildingControlSideLength = 1000D;
+    public static final Double buildingXBias = 15000D;
+    public static final Double buildingYBias = 15000D;
 }

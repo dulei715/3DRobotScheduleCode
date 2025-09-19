@@ -2,7 +2,7 @@ package hnu.dll.entity;
 
 import java.util.UUID;
 
-public abstract class Entity {
+public abstract class Entity implements Cloneable {
     protected String id;
     protected String name;
 
@@ -23,4 +23,5 @@ public abstract class Entity {
     public String getName() {
         return name;
     }
+
 }

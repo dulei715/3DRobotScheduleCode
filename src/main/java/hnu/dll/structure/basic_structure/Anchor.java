@@ -31,6 +31,7 @@ public class Anchor extends Entity implements Comparable<Anchor> {
         this.threeDLocation = new ThreeDLocation(x, y, z);
     }
 
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;

@@ -2,6 +2,7 @@ package hnu.dll.entity;
 
 import hnu.dll.basic_entity.location.PlaneLocation;
 import hnu.dll.basic_entity.location.ThreeDLocation;
+import hnu.dll.config.Constant;
 import hnu.dll.structure.Building;
 
 import java.util.ArrayList;
@@ -17,10 +18,8 @@ public class Stair extends Entity {
 
     public Stair(String name, Building building, PlaneLocation planeLocation, List<ThreeDLocation> innerNodeList, Double segmentLength) {
         super(name);
-        this.building = building;
         this.planeLocation = planeLocation;
-        this.innerNodeList = innerNodeList;
-        this.segmentLength = segmentLength;
+        resetBuilding(building);
     }
     public Stair(String name, Building building, PlaneLocation planeLocation) {
         super(name);
@@ -28,9 +27,15 @@ public class Stair extends Entity {
         this.planeLocation = planeLocation;
     }
 
-    public void setInnerNodeList(List<ThreeDLocation> innerNodeList) {
-        this.innerNodeList = innerNodeList;
+    public void resetBuilding(Building building) {
+        this.building = building;
+        this.innerNodeList = getDefaultInnerNodeList(this.planeLocation, 0D, building.getAverageLayerHeight(), building.getLayerSize());
+        this.segmentLength = building.getAverageLayerHeight() / 2 / Math.sin(Constant.DefaultStairAngle);
     }
+
+//    public void resetInnerNodeList(List<ThreeDLocation> innerNodeList) {
+//        this.innerNodeList = innerNodeList;
+//    }
 
 
     public void setSegmentLength(Double segmentLength) {

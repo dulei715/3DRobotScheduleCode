@@ -33,6 +33,10 @@ public class PlaneLocation extends Location {
         this.yIndex = yIndex;
     }
 
+    public PlaneLocation generateNewPlaneLocationWithBias(Double xBias, Double yBias) {
+        return new PlaneLocation(this.xIndex + xBias, this.yIndex + yBias);
+    }
+
 
     @Override
     public boolean equals(Object o) {

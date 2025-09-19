@@ -47,6 +47,11 @@ public class Elevator extends Entity {
 //    }
 
 
+    public void resetPlaneLocation(PlaneLocation planeLocation) {
+        this.planeLocation = planeLocation;
+    }
+
+
     public Elevator(String name, Building building, Double velocity, Double openingOrCloseTimeCost, PlaneLocation planeLocation, Integer originalStartLayer) {
         super(name);
         this.building = building;
@@ -62,6 +67,11 @@ public class Elevator extends Entity {
 //    public void setCurrentLayer(Integer currentTimeSlot, Integer currentLayer) {
 //        this.layerStatusList.set(currentTimeSlot, currentLayer);
 //    }
+
+
+    public Integer getOriginalStartLayer() {
+        return originalStartLayer;
+    }
 
     public void resetElevator() {
         this.currentTimeSlot = 0;
@@ -86,6 +96,10 @@ public class Elevator extends Entity {
 
     public PlaneLocation getPlaneLocation() {
         return planeLocation;
+    }
+
+    public void resetBuilding(Building building) {
+        this.building = building;
     }
 
     /**
@@ -149,6 +163,7 @@ public class Elevator extends Entity {
             elevator.increaseTimeSlotAndUpdateElevatorStatus();
         }
     }
+
 
     @Override
     public String toString() {

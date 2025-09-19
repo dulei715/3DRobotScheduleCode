@@ -19,9 +19,10 @@ public class SimpleGraph {
         this.graphTable = graphTable;
     }
     public void addElement(Entity preEntity, Entity nextEntity, Double weight) {
-        Map<Entity, Double> innerMap = this.graphTable.getOrDefault(preEntity, new HashMap<>());
-        innerMap.put(nextEntity, weight);
-        this.graphTable.put(preEntity, innerMap);
+//        Map<Entity, Double> innerMap = this.graphTable.getOrDefault(preEntity, new HashMap<>());
+//        innerMap.put(nextEntity, weight);
+//        this.graphTable.put(preEntity, innerMap);
+        this.graphTable.computeIfAbsent(preEntity, k->new HashMap<>()).put(nextEntity, weight);
     }
 
     public Double getWeight(Entity preEntity, Entity nextEntity) {
@@ -51,6 +52,19 @@ public class SimpleGraph {
 
     public Map<Entity, Double> getNextNodeAndWeight(Entity preEntity) {
         return this.graphTable.get(preEntity);
+    }
+
+    public void combine(SimpleGraph simpleGraph) {
+        Map<Entity, Map<Entity, Double>> graphTableB = simpleGraph.getGraphTable();
+        for (Map.Entry<Entity, Map<Entity, Double>> entry : graphTableB.entrySet()) {
+            Entity entryKey = entry.getKey();
+            Map<Entity, Double> entryValue = entry.getValue();
+            for (Map.Entry<Entity, Double> innerEntry : entryValue.entrySet()) {
+                Entity innerEntryKey = innerEntry.getKey();
+                Double value = innerEntry.getValue();
+                this.addElement(entryKey, innerEntryKey, value);
+            }
+        }
     }
 
     // for test

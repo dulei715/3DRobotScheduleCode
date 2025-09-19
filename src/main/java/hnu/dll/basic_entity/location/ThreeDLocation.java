@@ -35,6 +35,9 @@ public class ThreeDLocation extends Location implements Comparable<ThreeDLocatio
         this.zIndex = Double.parseDouble(locationStringArray[2]);
     }
 
+    public ThreeDLocation generateNewThreeDLocationWithBias(Double xBias, Double yBias, Double zBias) {
+        return new ThreeDLocation(this.xIndex + xBias, this.yIndex + yBias, this.zIndex + zBias);
+    }
 
 
     public Double getxIndex() {
