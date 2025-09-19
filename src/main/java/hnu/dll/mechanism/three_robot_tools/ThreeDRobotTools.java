@@ -1,4 +1,4 @@
-package hnu.dll.control.basic_tools;
+package hnu.dll.mechanism.three_robot_tools;
 
 import hnu.dll.basic_entity.location.PlaneLocation;
 import hnu.dll.basic_entity.location.ThreeDLocation;
@@ -19,7 +19,7 @@ import hnu.dll.structure.path.TimePointPath;
 
 import java.util.*;
 
-public class Tools {
+public class ThreeDRobotTools {
 
     public static final Class[] SupportTypes = {
             Elevator.class,
@@ -38,7 +38,7 @@ public class Tools {
      */
     public static TimeWeightedGraph getTimeWeightedGraph(SimpleGraph originalGraph, Robot robot) {
         TimeWeightedGraph timeWeightedGraph = new TimeWeightedGraph();
-        List<Set<Entity>> classifiedNodeSetList = originalGraph.getNodeSetsClassifiedByTypes(Tools.SupportTypes);
+        List<Set<Entity>> classifiedNodeSetList = originalGraph.getNodeSetsClassifiedByTypes(ThreeDRobotTools.SupportTypes);
         Map<Entity, Double> nextNodeAndWeight;
         Entity tempEntity;
         Double tempWeight;
@@ -614,11 +614,11 @@ public class Tools {
      * @param job
      * @return
      */
-    public static Match getPlanPath(Map<String, TimeWeightedGraph> timeGraphMap, List<Robot> robotList, Job job, Collection<Elevator> elevatorCollection, AnchorEntityConvertor convert) {
+    public static Match getPlanPathWithConflictElimination(Map<String, TimeWeightedGraph> timeGraphMap, List<Robot> robotList, Job job, Collection<Elevator> elevatorCollection, Integer topKSize, AnchorEntityConvertor convert) {
         Map<BasicPair<Task,Robot>, SortedPathStructure<TimePointPath>> result;
         job.initialTaskStartTimeAndEndTime();
         List<Task> taskList = job.getTaskList();
-        Map<BasicPair<Task, Robot>, SortedPathStructure<AnchorPointPath>> matchMapBasicPair = taskAssignment(timeGraphMap, taskList, robotList, Constant.topKSize,  convert);
+        Map<BasicPair<Task, Robot>, SortedPathStructure<AnchorPointPath>> matchMapBasicPair = taskAssignment(timeGraphMap, taskList, robotList, topKSize,  convert);
         BasicPair<Task, Robot> tempPair;
         SortedPathStructure<TimePointPath> pathStructure;
         MatchElement tempMatchElement;
@@ -634,6 +634,84 @@ public class Tools {
             tempAnchorPointPath = matchMapBasicPair.get(tempPair).getFirst();
             tempTimePointPath = pathStructure.getFirst();
             tempMatchElement = new MatchElement(tempPair.getKey(), tempPair.getValue(), tempAnchorPointPath, tempTimePointPath);
+            match.add(tempMatchElement);
+        }
+
+        return match;
+    }
+
+    /**
+     * 获取一个实践路径中使用了多少次电梯
+     * @param timePointPath
+     * @return
+     */
+    public static List<BasicPair<AnchorEntity, Integer>> getUsingElevatorTimes(TimePointPath timePointPath) {
+        Integer index = 0;
+        Integer times = 0;
+        Integer timeLength = timePointPath.getTimeLength();
+        List<BasicPair<AnchorEntity, Integer>> indexList = new ArrayList<>();
+        AnchorEntity anchorEntity = null;
+        Entity entity;
+        while (index < timeLength) {
+            for (; index < timeLength; ++index) {
+                anchorEntity = timePointPath.getAnchorEntityByIndex(index);
+                entity = anchorEntity.getEntity();
+
+                if (entity instanceof Elevator) {
+                    break;
+                }
+            }
+            if (index >= timeLength) {
+                break;
+            }
+            indexList.add(new BasicPair<>(anchorEntity, index));
+            for(; index < timeLength; ++index) {
+                anchorEntity = timePointPath.getAnchorEntityByIndex(index);
+                entity = anchorEntity.getEntity();
+                if (!(entity instanceof Elevator)) {
+                    break;
+                }
+            }
+
+        }
+        return indexList;
+    }
+
+    public static Match getPlanPathIdeal(Map<String, TimeWeightedGraph> timeGraphMap, List<Robot> robotList, Job job, Collection<Elevator> elevatorCollection, AnchorEntityConvertor convert) {
+        Map<BasicPair<Task,Robot>, SortedPathStructure<TimePointPath>> result;
+        job.initialTaskStartTimeAndEndTime();
+        List<Task> taskList = job.getTaskList();
+        Integer topKSize = 1;
+        Map<BasicPair<Task, Robot>, SortedPathStructure<AnchorPointPath>> matchMapBasicPair = taskAssignment(timeGraphMap, taskList, robotList, topKSize,  convert);
+        BasicPair<Task, Robot> tempPair;
+        SortedPathStructure<TimePointPath> pathStructure;
+        MatchElement tempMatchElement;
+        AnchorPointPath tempAnchorPointPath;
+        TimePointPath tempTimePointPath;
+        result = toTimePointSortedPath(matchMapBasicPair);
+
+        // 需要将开关电梯门加入
+        Integer doorExecuteTime = (int) Math.ceil(Constant.OpenOrCloseDoorTimeCost * 3 / Constant.TimeUnit);
+        for (Map.Entry<BasicPair<Task, Robot>, SortedPathStructure<TimePointPath>> entry : result.entrySet()) {
+            BasicPair<Task, Robot> key = entry.getKey();
+            TimePointPath path = entry.getValue().getFirst();
+            List<BasicPair<AnchorEntity, Integer>> usingElevatorTimes = getUsingElevatorTimes(path);
+            for (BasicPair<AnchorEntity, Integer> pair : usingElevatorTimes) {
+                path.insertAnchorEntity(pair.getKey(), pair.getValue(), doorExecuteTime);
+            }
+        }
+        Match match = new Match();
+
+        Task tempTask;
+        Robot tempRobot;
+        for (Map.Entry<BasicPair<Task, Robot>, SortedPathStructure<TimePointPath>> entry : result.entrySet()) {
+            tempPair = entry.getKey();
+            tempTask = tempPair.getKey();
+            tempRobot = tempPair.getValue();
+            pathStructure = entry.getValue();
+            tempAnchorPointPath = matchMapBasicPair.get(tempPair).getFirst();
+            tempTimePointPath = pathStructure.getFirst();
+            tempMatchElement = new MatchElement(tempTask, tempRobot, tempAnchorPointPath, tempTimePointPath);
             match.add(tempMatchElement);
         }
 

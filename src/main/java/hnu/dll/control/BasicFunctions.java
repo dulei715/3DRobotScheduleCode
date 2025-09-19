@@ -23,6 +23,14 @@ public class BasicFunctions {
         return (x > 0) ? 1 : (x < 0 ? -1 : 0);
     }
 
+    public static List<Double> toDoubleList(List<Object> objectList) {
+        List<Double> doubleList = new ArrayList<>(objectList.size());
+        for (Object object : objectList) {
+            doubleList.add((Double) object);
+        }
+        return doubleList;
+    }
+
     // 暂不支持存在地下层的情况
     public static Integer getElevatorRunningTimeSlots(Integer startLayer, Integer endLayer, Double averageRunningVelocity) {
         Double realTime = (endLayer - startLayer) * Constant.NeighboringLayersDistance / averageRunningVelocity;

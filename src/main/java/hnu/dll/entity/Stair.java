@@ -22,6 +22,20 @@ public class Stair extends Entity {
         this.innerNodeList = innerNodeList;
         this.segmentLength = segmentLength;
     }
+    public Stair(String name, Building building, PlaneLocation planeLocation) {
+        super(name);
+        this.building = building;
+        this.planeLocation = planeLocation;
+    }
+
+    public void setInnerNodeList(List<ThreeDLocation> innerNodeList) {
+        this.innerNodeList = innerNodeList;
+    }
+
+
+    public void setSegmentLength(Double segmentLength) {
+        this.segmentLength = segmentLength;
+    }
 
     public static List<ThreeDLocation> getDefaultInnerNodeList(PlaneLocation bottomLocation, Double startZIndex, Double neighboringLayerDistance, Integer layerSize) {
         Double xIndex = bottomLocation.getxIndex();
@@ -53,6 +67,7 @@ public class Stair extends Entity {
     public Double getSegmentLength() {
         return segmentLength;
     }
+
 
     @Override
     public String toString() {

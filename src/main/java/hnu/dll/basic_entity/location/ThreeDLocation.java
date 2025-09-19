@@ -1,5 +1,6 @@
 package hnu.dll.basic_entity.location;
 
+import java.util.List;
 import java.util.Objects;
 
 public class ThreeDLocation extends Location implements Comparable<ThreeDLocation> {
@@ -17,6 +18,14 @@ public class ThreeDLocation extends Location implements Comparable<ThreeDLocatio
         this.xIndex = xIndex;
         this.yIndex = yIndex;
         this.zIndex = zIndex;
+    }
+    public ThreeDLocation(List<Double> indexList) {
+        if (indexList.size() != 3) {
+            throw new RuntimeException("The parameter size is not 3!");
+        }
+        this.xIndex = indexList.get(0);
+        this.yIndex = indexList.get(1);
+        this.zIndex = indexList.get(2);
     }
 
     public ThreeDLocation(String locationString, String splitTag) {

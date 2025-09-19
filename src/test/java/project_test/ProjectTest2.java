@@ -9,7 +9,7 @@ import hnu.dll.basic_entity.location.PlaneLocation;
 import hnu.dll.basic_entity.location.ThreeDLocation;
 import hnu.dll.config.Constant;
 import hnu.dll.control.BasicFunctions;
-import hnu.dll.control.basic_tools.Tools;
+import hnu.dll.mechanism.three_robot_tools.ThreeDRobotTools;
 import hnu.dll.control.topk.AnchorEntityConvertor;
 import hnu.dll.control.topk.AnchorEntityTransform;
 import hnu.dll.entity.*;
@@ -163,7 +163,7 @@ public class ProjectTest2 {
         for (Map.Entry<String, List<Robot>> entry : robotTypeMap.entrySet()) {
             robotType = entry.getKey();
             tempRobot = entry.getValue().get(0);
-            tempTimeWeightedGraph = Tools.getTimeWeightedGraph(simpleGraph, tempRobot);
+            tempTimeWeightedGraph = ThreeDRobotTools.getTimeWeightedGraph(simpleGraph, tempRobot);
             robotTypeTimeWeightedGraphMap.put(robotType, tempTimeWeightedGraph);
         }
     }
@@ -232,7 +232,7 @@ public class ProjectTest2 {
         List<Task> taskList = job.getTaskList();
         List<Robot> robotList = Robot.getRobotList(robotTypeMap);
         Integer topKSize = Constant.topKSize; // 3
-        Map<BasicPair<Task, Robot>, SortedPathStructure<AnchorPointPath>> pathMap = Tools.taskAssignment(robotTypeTimeWeightedGraphMap, taskList, robotList, topKSize, anchorEntityConvertor);
+        Map<BasicPair<Task, Robot>, SortedPathStructure<AnchorPointPath>> pathMap = ThreeDRobotTools.taskAssignment(robotTypeTimeWeightedGraphMap, taskList, robotList, topKSize, anchorEntityConvertor);
         MyPrint.showMap(pathMap);
     }
 
@@ -243,7 +243,9 @@ public class ProjectTest2 {
         for (List<Robot> tempRobotList : robotTypeMap.values()) {
             robotList.addAll(tempRobotList);
         }
-        Match planPath = Tools.getPlanPath(timeGraphMap, robotList, job, elevatorList, anchorEntityConvertor);
+//        Integer topKSize = Constant.topKSize;
+        Integer topKSize = 1;
+        Match planPath = ThreeDRobotTools.getPlanPathWithConflictElimination(timeGraphMap, robotList, job, elevatorList, topKSize, anchorEntityConvertor);
         System.out.println(planPath);
     }
 
