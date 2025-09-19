@@ -118,12 +118,12 @@ public class ProjectTest2 {
                 locationMap.put(entityName, location);
                 entityMap.put(entityName, new Elevator(entityName, building, Constant.ElevatorAverageVelocity,
                         Constant.OpenOrCloseDoorTimeCost,
-                        location, Constant.DefaultStartLayer));
+                        location, Constant.DefaultElevatorStartLayer));
             } else if (entityName.startsWith("S")) {
                 PlaneLocation location = new PlaneLocation(value, PropertiesSplitTag);
                 locationMap.put(entityName, location);
                 List<ThreeDLocation> locationList = Stair.getDefaultInnerNodeList(location, 0D, Constant.NeighboringLayersDistance, building.getLayerSize());
-                entityMap.put(entityName, new Stair(entityName, building, location, locationList, Constant.NeighboringLayersDistance / 2 / Math.sin(Constant.stairAngle)));
+                entityMap.put(entityName, new Stair(entityName, building, location, locationList, Constant.NeighboringLayersDistance / 2 / Math.sin(Constant.DefaultStairAngle)));
             } else {
                 ThreeDLocation location = new ThreeDLocation(value, PropertiesSplitTag);
                 locationMap.put(entityName, location);
@@ -191,6 +191,15 @@ public class ProjectTest2 {
         System.out.println(graphTable.size());
         MyPrint.showSplitLine("*", 150);
         MyPrint.showMap(graphTable);
+    }
+
+    @Test
+    public void entityMapTest() {
+        MyPrint.showMap(entityMap);
+    }
+    @Test
+    public void stringAnchorListMapTest() {
+        MyPrint.showMap(stringAnchorListMap);
     }
 
 

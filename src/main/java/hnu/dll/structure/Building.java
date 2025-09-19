@@ -22,4 +22,11 @@ public class Building {
     public Double getAverageLayerHeight() {
         return averageLayerHeight;
     }
+
+
+    public Integer getBuildingNumber() {
+        // 要求Building的命名形如：Building-number
+        String[] splitArray = this.buildingName.split("-");
+        return Integer.valueOf(splitArray[splitArray.length-1]);
+    }
 }

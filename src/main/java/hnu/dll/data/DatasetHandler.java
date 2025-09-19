@@ -59,12 +59,12 @@ public class DatasetHandler {
         typeName = "L";
         ThreeDLocation centerLocation = getCenterThreeDLocation(reader, 1, 4);
         PlaneLocation planeLocation = new PlaneLocation(centerLocation.getxIndex(), centerLocation.getyIndex());
-        Elevator elevator = new Elevator("L-2", building, Constant.ElevatorAverageVelocity, Constant.OpenOrCloseDoorTimeCost, planeLocation, Constant.DefaultStartLayer);
+        Elevator elevator = new Elevator("L-2", building, Constant.ElevatorAverageVelocity, Constant.OpenOrCloseDoorTimeCost, planeLocation, Constant.DefaultElevatorStartLayer);
         typeNameEntityMap.computeIfAbsent(typeName, k->new ArrayList<>()).add(elevator);
 
         centerLocation = getCenterThreeDLocation(reader, 5, 4);
         planeLocation = new PlaneLocation(centerLocation.getxIndex(), centerLocation.getyIndex());
-        elevator = new Elevator("L-1", building, Constant.ElevatorAverageVelocity, Constant.OpenOrCloseDoorTimeCost, planeLocation, Constant.DefaultStartLayer);
+        elevator = new Elevator("L-1", building, Constant.ElevatorAverageVelocity, Constant.OpenOrCloseDoorTimeCost, planeLocation, Constant.DefaultElevatorStartLayer);
         typeNameEntityMap.computeIfAbsent(typeName, k->new ArrayList<>()).add(elevator);
 
         // 添加楼梯

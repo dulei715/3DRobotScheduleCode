@@ -28,7 +28,7 @@ public class Constant {
     // for Elevator
     public static final Double ElevatorAverageVelocity = 2D;
     public static final Double OpenOrCloseDoorTimeCost = 1.5;
-    public static final Integer DefaultStartLayer = 1;
+    public static final Integer DefaultElevatorStartLayer = 1;
 
     // for Robot
     public static final Double DogRobotPlaneVelocity = 0.5;
@@ -40,5 +40,5 @@ public class Constant {
     public static final Double PersonRobotCapacity = 7D;
 
     // for Stair
-    public static final Double stairAngle = Math.PI / 6;  // 设置楼梯仰角30度
+    public static final Double DefaultStairAngle = Math.PI / 6;  // 设置楼梯仰角30度
 }
