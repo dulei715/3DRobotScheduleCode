@@ -16,6 +16,8 @@ public class Constant {
 
     public static final String BasicPath = "/Volumes/leileidu-mac-extension/2.important_files/MainFiles/1.Research/dataset/8_robot_schedule/data/";
 
+    public static final Integer PrecisionSize = 2;
+
 
 
     public static final Double NeighboringLayersDistance = 3.5;
