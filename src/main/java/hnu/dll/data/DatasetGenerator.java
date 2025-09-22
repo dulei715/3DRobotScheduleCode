@@ -2,14 +2,12 @@ package hnu.dll.data;
 
 import cn.edu.dll.basic.BasicCalculation;
 import cn.edu.dll.basic.RandomUtil;
+import cn.edu.dll.io.print.MyPrint;
 import hnu.dll.basic_entity.location.Location;
 import hnu.dll.basic_entity.location.PlaneLocation;
 import hnu.dll.basic_entity.location.ThreeDLocation;
 import hnu.dll.config.Constant;
-import hnu.dll.entity.Elevator;
-import hnu.dll.entity.Entity;
-import hnu.dll.entity.Robot;
-import hnu.dll.entity.Stair;
+import hnu.dll.entity.*;
 import hnu.dll.structure.Building;
 import hnu.dll.structure.DatasetStructure;
 import hnu.dll.structure.basic_structure.Anchor;
@@ -18,6 +16,22 @@ import hnu.dll.structure.graph.SimpleGraph;
 import java.util.*;
 
 public class DatasetGenerator {
+    public static Map<String, Entity> extractEntityMap(DatasetStructure datasetStructure) {
+        Map<String, Entity> map = new HashMap<>();
+        List<Anchor> anchorList = datasetStructure.getAnchorList();
+        List<Elevator> elevatorList = datasetStructure.getElevatorList();
+        List<Stair> stairList = datasetStructure.getStairList();
+        for (Anchor anchor : anchorList) {
+            map.put(anchor.getName(), anchor);
+        }
+        for (Elevator elevator : elevatorList) {
+            map.put(elevator.getName(), elevator);
+        }
+        for (Stair stair : stairList) {
+            map.put(stair.getName(), stair);
+        }
+        return map;
+    }
     public static List<Building> generateBuildings(Integer buildingSize, Integer layerSizeLowerBound, Integer layerSizeUpperBound, Random random) {
         List<Building> buildingList = new ArrayList<>(buildingSize);
         Building building;
@@ -29,21 +43,25 @@ public class DatasetGenerator {
         }
         return buildingList;
     }
-    public static Map<String, List<Robot>> generateRobotMap(Integer dogSize, Integer personSize) {
+    public static Map<String, List<Robot>> generateRobotMap(Integer dogSize, Integer personSize, List<Anchor> candidateLocationAnchorList, List<Integer> dogIndexList, List<Integer> personIndexList) {
         Map<String, List<Robot>> map = new HashMap<>();
         Robot robot;
         List<Robot> tempRobotList = new ArrayList<>(dogSize);
+        int k = 0;
         for (int i = 0; i < dogSize; ++i) {
             robot = new Robot("robot-dog-"+(i+1), Robot.DogRobotType, Constant.DogRobotPlaneVelocity, Constant.DogRobotStairVelocity, Constant.DogRobotCapacity);
+            robot.setLocation(candidateLocationAnchorList.get(dogIndexList.get(k++)));
             tempRobotList.add(robot);
         }
-        map.put("robot-dog", tempRobotList);
+        k = 0;
+        map.put(Robot.DogRobotType, tempRobotList);
         tempRobotList = new ArrayList<>(personSize);
         for (int i = 0; i < personSize; ++i) {
             robot = new Robot("robot-person-"+(i+1), Robot.PersonRobotType, Constant.PersonRobotPlaneVelocity, Constant.PersonRobotStairVelocity, Constant.PersonRobotCapacity);
+            robot.setLocation(candidateLocationAnchorList.get(personIndexList.get(k++)));
             tempRobotList.add(robot);
         }
-        map.put("robot-person", tempRobotList);
+        map.put(Robot.PersonRobotType, tempRobotList);
         return map;
     }
 
@@ -86,15 +104,11 @@ public class DatasetGenerator {
     }
     private static Stair generateStair(PlaneLocation planeLocation, Building building, int i, Double startZIndex) {
         Stair tempStair;
-        Integer layerSize = building.getLayerSize();
-        Double neighboringLayerHeight = building.getAverageLayerHeight();
-        List<ThreeDLocation> defaultInnerNodeList = Stair.getDefaultInnerNodeList(planeLocation, startZIndex, neighboringLayerHeight, layerSize);
-        Double segmentSize = neighboringLayerHeight / 2 / Math.sin(Constant.DefaultStairAngle);
-        tempStair = new Stair("S-" + building.getBuildingNumber() +"-"+ i, building, planeLocation, defaultInnerNodeList, segmentSize);
+        tempStair = new Stair("S-" + building.getBuildingNumber() +"-"+ i, building, planeLocation);
         return tempStair;
     }
 
-    public static DatasetStructure generateBasicNormalAnchor(Integer anchorSize, Integer maxHalfNeighboringSize, Integer elevatorSize, Integer stairSize, Building building, Random random, Double positionLowerBound, Double positionUpperBound, Double neighboringDistanceLowerBound, Double neighboringDistanceUpperBound) {
+    public static DatasetStructure generateBasicNormalEntity(Integer anchorSize, Integer maxHalfNeighboringSize, Integer elevatorSize, Integer stairSize, Building building, Random random, Double positionLowerBound, Double positionUpperBound, Double neighboringDistanceLowerBound, Double neighboringDistanceUpperBound) {
         Set<PlaneLocation> planeLocationSet = new HashSet<>();
         SimpleGraph simpleGraph = new SimpleGraph();
         PlaneLocation tempPlaneLocation;
@@ -121,7 +135,6 @@ public class DatasetGenerator {
             anchorList.add(tempAnchor);
         }
 
-        // todo
 
         // 生成电梯
         elevatorList = new ArrayList<>();
@@ -150,7 +163,7 @@ public class DatasetGenerator {
             tempAnchor = anchorList.get(i);
             for (int j = i + 1, k = 0; j < anchorSize && k < maxHalfNeighboringSize; ++j, ++k) {
                  Anchor anotherAnchor = anchorList.get(j);
-                tempDistance = RandomUtil.getRandomDouble(neighboringDistanceLowerBound, neighboringDistanceUpperBound, random);
+                tempDistance = BasicCalculation.getPrecisionValue(RandomUtil.getRandomDouble(neighboringDistanceLowerBound, neighboringDistanceUpperBound, random), Constant.PrecisionSize);
                 simpleGraph.addElement(tempAnchor, anotherAnchor, tempDistance);
                 simpleGraph.addElement(anotherAnchor, tempAnchor, tempDistance);
             }
@@ -163,7 +176,7 @@ public class DatasetGenerator {
             tempAnchorIndex = elevatorRelativeAnchorIndex.get(i);
             tempAnchor = anchorList.get(tempAnchorIndex);
             tempElevator = elevatorList.get(i);
-            tempDistance = RandomUtil.getRandomDouble(neighboringDistanceLowerBound, neighboringDistanceUpperBound, random);
+            tempDistance = BasicCalculation.getPrecisionValue(RandomUtil.getRandomDouble(neighboringDistanceLowerBound, neighboringDistanceUpperBound, random), Constant.PrecisionSize);
             simpleGraph.addElement(tempAnchor, tempElevator, tempDistance);
             simpleGraph.addElement(tempElevator, tempAnchor, tempDistance);
         }
@@ -174,7 +187,7 @@ public class DatasetGenerator {
             tempAnchorIndex = stairRelativeAnchorIndex.get(i);
             tempAnchor = anchorList.get(tempAnchorIndex);
             tempStair = stairList.get(i);
-            tempDistance = RandomUtil.getRandomDouble(neighboringDistanceLowerBound, neighboringDistanceUpperBound, random);
+            tempDistance = BasicCalculation.getPrecisionValue(RandomUtil.getRandomDouble(neighboringDistanceLowerBound, neighboringDistanceUpperBound, random), Constant.PrecisionSize);
             simpleGraph.addElement(tempAnchor, tempStair, tempDistance);
             simpleGraph.addElement(tempStair, tempAnchor, tempDistance);
         }
@@ -225,7 +238,7 @@ public class DatasetGenerator {
         for (Anchor oldAnchor : anchorList) {
             String oldName = oldAnchor.getName();
             String newName = oldName.replaceFirst("-(\\d+)-", "-".concat(buildingNumber.toString()).concat("-"));
-            ThreeDLocation oldLocation = oldAnchor.getLocation();
+            ThreeDLocation oldLocation = (ThreeDLocation) oldAnchor.getLocation();
             newAnchor = new Anchor(newName, oldLocation.generateNewThreeDLocationWithBias(xBias, yBias, 0D));
             newAnchorList.add(newAnchor);
         }
@@ -291,13 +304,13 @@ public class DatasetGenerator {
 
         anchorListList.add(basicAnchorList);
         simpleGraphList.add(basicSimpleGraph);
-        for (int i = 2; i <= layerSize; ++i) {
+        for (int i = 1; i < layerSize; ++i) {
             tempNewAnchorList = new ArrayList<>();
             for (Anchor basicAnchor : basicAnchorList) {
                 String oldName = basicAnchor.getName();
-                String newName = oldName.replaceFirst("-(\\d+)-(\\d+)-", "-$1-" + i + "-");
-                ThreeDLocation oldLocation = basicAnchor.getLocation();
-                tempNewAnchor = new Anchor(newName, oldLocation.generateNewThreeDLocationWithBias(0D, 0D, averageLayerHeight));
+                String newName = oldName.replaceFirst("-(\\d+)-(\\d+)-", "-$1-" + (i+1) + "-");
+                ThreeDLocation oldLocation = (ThreeDLocation) basicAnchor.getLocation();
+                tempNewAnchor = new Anchor(newName, oldLocation.generateNewThreeDLocationWithBias(0D, 0D, averageLayerHeight * i));
                 tempNewAnchorList.add(tempNewAnchor);
             }
             anchorListList.add(tempNewAnchorList);
@@ -327,7 +340,7 @@ public class DatasetGenerator {
 
 
 
-    public static DatasetStructure generateTotalSimpleGraph(DatasetStructure modelSimpleGraphStructure, Building basicBuilding, Integer buildingSize, Integer buildingHalfNeighboringUpperBound, Integer buildingLayerSizeLowerBound, Integer buildingLayerSizeUpperBound, Random random, Double neighboringDistanceLowerBound, Double neighboringDistanceUpperBound) {
+    public static DatasetStructure generateTotalSimpleGraph(DatasetStructure modelSimpleGraphStructure, Integer buildingSize, Integer buildingLayerSizeLowerBound, Integer buildingLayerSizeUpperBound, Random random, Double neighboringDistanceLowerBound, Double neighboringDistanceUpperBound) {
         // 扩展默认的
         List<Building> buildingList = generateBuildings(buildingSize, buildingLayerSizeLowerBound, buildingLayerSizeUpperBound, random);
         List<Anchor> basicAnchorList = modelSimpleGraphStructure.getAnchorList();
@@ -358,7 +371,7 @@ public class DatasetGenerator {
         DatasetStructure tempDatasetStructure;
         for (int i = 0; i < buildingSize; ++i) {
             tempNewBuilding = buildingList.get(i);
-            tempDatasetStructure = generateNewBasicGraph(modelSimpleGraphStructure, Constant.buildingXBias, Constant.buildingYBias, tempNewBuilding);
+            tempDatasetStructure = generateNewBasicGraph(modelSimpleGraphStructure, Constant.buildingXBias * i, Constant.buildingYBias * i, tempNewBuilding);
             extendDataStructureAlongZDirect(tempDatasetStructure, tempNewBuilding);
             dataStructureList.add(tempDatasetStructure);
         }
@@ -377,6 +390,7 @@ public class DatasetGenerator {
         Anchor nextAnchorA = nextStructure.getAnchorList().get(indexListList.get(1).get(0));
         Double randomWeight = RandomUtil.getRandomDouble(neighboringDistanceLowerBound, neighboringDistanceUpperBound, random);
         finalSimpleGraph.addElement(currentAnchorB, nextAnchorA, randomWeight);
+//        System.out.println(currentAnchorB + " 与 " + nextAnchorA + " 相连");
         List<Integer> beforeIndexList, currentIndexList, nextIndexList;
         for (int i = 1; i < buildingSize - 1; ++i) {
             beforeStructure = dataStructureList.get(i-1);
@@ -409,5 +423,45 @@ public class DatasetGenerator {
         finalSimpleGraph.addElement(beforeAnchorB, currentAnchorA, randomWeight);
         finalStructure.combine(dataStructureList.get(buildingSize - 1));
         return finalStructure;
+    }
+
+    public static Job generateJob(Integer taskSize, List<Anchor> candidateList, List<Integer> chosenIndexList) {
+        Task tempTask;
+        List<Task> taskList = new ArrayList<>();
+        int k = 0;
+        for (int i = 0; i < taskSize; ++i) {
+            tempTask = new Task("task-"+(i+1), candidateList.get(chosenIndexList.get(k++)), candidateList.get(chosenIndexList.get(k++)), Constant.DefaultFetchTime, Constant.DefaultSendOffTime, Constant.DefaultOccupyingSpace);
+            taskList.add(tempTask);
+        }
+        return new Job("Job-1", Constant.DefaultJobStartTime, Constant.DefaultJobEndTime, taskList);
+    }
+
+
+    public static void main(String[] args) {
+        DatasetStructure modelSimpleGraphStructure;
+        Integer buildingSize = 3;
+        Integer buildingLayerSizeLowerBound = 3;
+        Integer buildingLayerSizeUpperBound = 5;
+        Random random = new Random(1);
+
+        Double neighboringDistanceLowerBound = 2D;
+        Double neighboringDistanceUpperBound = 7D;
+
+        Integer basicAnchorSize = 3;
+        Integer maxHalfNeighboringSize = 3;
+        Integer elevatorSize = 2;
+        Integer stairSize = 2;
+        Building basicBuilding = new Building("building-model-0", 3, Constant.NeighboringLayersDistance);
+        Double positionLowerBound = 0D, positionUpperBound = 1000D;
+        DatasetStructure modelDatasetStructure = generateBasicNormalEntity(basicAnchorSize, maxHalfNeighboringSize, elevatorSize, stairSize, basicBuilding, random, positionLowerBound, positionUpperBound, neighboringDistanceLowerBound, neighboringDistanceUpperBound);
+//        System.out.println(datasetStructure);
+        modelDatasetStructure.show();
+
+        MyPrint.showSplitLine("-", 200);
+
+        DatasetStructure finalDatasetStructure = generateTotalSimpleGraph(modelDatasetStructure, buildingSize, buildingLayerSizeLowerBound, buildingLayerSizeUpperBound, random, neighboringDistanceLowerBound, neighboringDistanceUpperBound);
+        finalDatasetStructure.show();
+
+        System.out.println(finalDatasetStructure.getSimpleGraph().getGraphTable().keySet().size());;
     }
 }

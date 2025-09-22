@@ -1,5 +1,6 @@
 package hnu.dll.structure;
 
+import cn.edu.dll.io.print.MyPrint;
 import hnu.dll.basic_entity.location.Location;
 import hnu.dll.basic_entity.location.PlaneLocation;
 import hnu.dll.entity.Elevator;
@@ -66,5 +67,29 @@ public class DatasetStructure {
         this.planeLocationSet.addAll(datasetStructure.planeLocationSet);
 
 
+    }
+
+    @Override
+    public String toString() {
+        return "DatasetStructure{" +
+                "simpleGraph=" + simpleGraph +
+                ", anchorList=" + anchorList +
+                ", elevatorList=" + elevatorList +
+                ", stairList=" + stairList +
+                ", planeLocationSet=" + planeLocationSet +
+                '}';
+    }
+
+    public void show() {
+        this.simpleGraph.show();
+        MyPrint.showSplitLine("*", 100);
+        MyPrint.showList(this.anchorList);
+        MyPrint.showSplitLine("*", 100);
+        MyPrint.showList(this.elevatorList);
+        MyPrint.showSplitLine("*", 100);
+        MyPrint.showList(this.stairList);
+        MyPrint.showSplitLine("*", 100);
+        MyPrint.showCollection(this.planeLocationSet);
+        MyPrint.showSplitLine("*", 100);
     }
 }

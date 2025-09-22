@@ -121,8 +121,8 @@ public class ProjectTest {
             } else if (entityName.startsWith("S")) {
                 PlaneLocation location = new PlaneLocation(value, PropertiesSplitTag);
                 locationMap.put(entityName, location);
-                List<ThreeDLocation> locationList = Stair.getDefaultInnerNodeList(location, 0D, Constant.NeighboringLayersDistance, building.getLayerSize());
-                entityMap.put(entityName, new Stair(entityName, building, location, locationList, Constant.NeighboringLayersDistance / 2 / Math.sin(Constant.DefaultStairAngle)));
+//                List<ThreeDLocation> locationList = Stair.getDefaultInnerNodeList(location, 0D, Constant.NeighboringLayersDistance, building.getLayerSize());
+                entityMap.put(entityName, new Stair(entityName, building, location));
             } else {
                 ThreeDLocation location = new ThreeDLocation(value, PropertiesSplitTag);
                 locationMap.put(entityName, location);

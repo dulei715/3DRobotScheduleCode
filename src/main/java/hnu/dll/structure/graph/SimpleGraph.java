@@ -1,8 +1,12 @@
 package hnu.dll.structure.graph;
 
+import cn.edu.dll.constant_values.ConstantValues;
+import com.sun.xml.internal.ws.util.StringUtils;
+import hnu.dll.config.Constant;
 import hnu.dll.entity.Entity;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 标识节点之间的行走路径长度
@@ -27,6 +31,9 @@ public class SimpleGraph {
 
     public Double getWeight(Entity preEntity, Entity nextEntity) {
         Map<Entity, Double> innerMap = this.graphTable.get(preEntity);
+        if (innerMap == null) {
+            return null;
+        }
         return innerMap.get(nextEntity);
     }
 
@@ -70,5 +77,42 @@ public class SimpleGraph {
     // for test
     public Map<Entity, Map<Entity, Double>> getGraphTable() {
         return graphTable;
+    }
+
+    public void show() {
+        Set<Entity> entitySet = new HashSet<>(this.graphTable.keySet());
+        Map<String, Entity> nameMap = new TreeMap<>();
+        for (Map.Entry<Entity, Map<Entity, Double>> entry : this.graphTable.entrySet()) {
+            entitySet.addAll(entry.getValue().keySet());
+        }
+        for (Entity entity : entitySet) {
+            nameMap.put(entity.toSimpleString(), entity);
+        }
+        Set<String> entityNameSet = nameMap.keySet();
+        String space = " ";
+        int columnWidth = 20;
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(String.format("%-" + columnWidth + "s", " "));
+        stringBuilder.append(entityNameSet.stream().map(e -> String.format("%-" + columnWidth + "s", e)).collect(Collectors.joining(space)));
+        Double tempWeight;
+        stringBuilder.append(ConstantValues.LINE_SPLIT);
+        Entity entity, innerEntity;
+        for (String entityName : entityNameSet) {
+            stringBuilder.append(String.format("%-" + columnWidth + "s", entityName));
+            entity = nameMap.get(entityName);
+            for (String innerEntityName : entityNameSet) {
+                innerEntity = nameMap.get(innerEntityName);
+                tempWeight = this.getWeight(entity, innerEntity);
+                stringBuilder.append(space);
+                if (tempWeight == null) {
+                    stringBuilder.append(String.format("%-" + columnWidth + "s", " "));
+                } else {
+                    stringBuilder.append(String.format("%-" + columnWidth + "." + Constant.PrecisionSize + "f", tempWeight));
+//                    stringBuilder.append(tempWeight);
+                }
+            }
+            stringBuilder.append(ConstantValues.LINE_SPLIT);
+        }
+        System.out.println(stringBuilder);
     }
 }

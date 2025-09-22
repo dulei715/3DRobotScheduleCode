@@ -2,7 +2,7 @@ package hnu.dll.basic_entity.location;
 
 import java.util.Objects;
 
-public class PlaneLocation extends Location {
+public class PlaneLocation extends Location implements Comparable<PlaneLocation> {
     private Double xIndex;
     private Double yIndex;
 
@@ -65,5 +65,14 @@ public class PlaneLocation extends Location {
     @Override
     public Double[] getIndexArray() {
         return new Double[]{this.xIndex, this.yIndex};
+    }
+
+    @Override
+    public int compareTo(PlaneLocation location) {
+        int differ = this.xIndex.compareTo(location.xIndex);
+        if (differ != 0) {
+            return differ;
+        }
+        return this.yIndex.compareTo(location.yIndex);
     }
 }

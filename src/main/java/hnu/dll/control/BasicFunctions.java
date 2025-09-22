@@ -7,6 +7,7 @@ import hnu.dll.control.topk.YenTopKPaths;
 import hnu.dll.entity.Entity;
 import hnu.dll.entity.Robot;
 import hnu.dll.entity.Task;
+import hnu.dll.structure.AnchorEntity;
 import hnu.dll.structure.SortedPathStructure;
 import hnu.dll.structure.TimeWeightedGraph;
 import hnu.dll.structure.basic_structure.Anchor;
@@ -56,6 +57,33 @@ public class BasicFunctions {
         }
         return result;
     }
+
+    public static Integer getOccupyingTimeSlotLengthFromGivenStartTime(TimePointPath timePointPath, Integer startTimeSlot) {
+        Integer endTimeSlot = startTimeSlot;
+        Integer pathLength = timePointPath.getTimeLength();
+        Entity startEntity = timePointPath.getAnchorEntityByIndex(startTimeSlot).getEntity();
+        Entity endEntity;
+        for (; endTimeSlot < pathLength; ++endTimeSlot) {
+            endEntity = timePointPath.getAnchorEntityByIndex(endTimeSlot).getEntity();
+            if (!startEntity.equals(endEntity)) {
+                break;
+            }
+        }
+        return endTimeSlot - startTimeSlot;
+    }
+
+    /**
+     * 不适用于楼梯
+     * @param timePointPath
+     * @param timeSlot
+     * @return
+     */
+    public static Integer getGivenTimeSlotLayer(TimePointPath timePointPath, Integer timeSlot) {
+        Anchor anchor = timePointPath.getAnchorEntityByIndex(timeSlot).getAnchor();
+        return getLayer(anchor.getLocation());
+    }
+
+
 
     /**
      * 使用 Dijkstra（非负权）+ Yen 框架；

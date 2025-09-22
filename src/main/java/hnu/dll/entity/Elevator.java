@@ -109,7 +109,7 @@ public class Elevator extends Entity {
      */
     public Integer getCurrentLayer(Integer currentTimeSlot) {
         if(!currentTimeSlot.equals(this.currentTimeSlot)) {
-            throw new RuntimeException("当前时刻不同步或不支持其他时刻的查询！");
+            throw new RuntimeException("当前时刻不同步或不支持其他时刻的查询！电梯时刻是 " + this.currentTimeSlot + ", 而传入的时刻是 " + currentTimeSlot + "!");
         }
         return this.currentLayer;
     }

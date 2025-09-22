@@ -1,5 +1,6 @@
 package hnu.dll.structure.basic_structure;
 
+import hnu.dll.basic_entity.location.Location;
 import hnu.dll.basic_entity.location.PlaneLocation;
 import hnu.dll.basic_entity.location.ThreeDLocation;
 import hnu.dll.entity.Entity;
@@ -22,9 +23,7 @@ public class Anchor extends Entity implements Comparable<Anchor> {
         this.threeDLocation = threeDLocation;
     }
 
-    public ThreeDLocation getLocation() {
-        return threeDLocation;
-    }
+
 
     public Anchor(String name, Double x, Double y, Double z) {
         super(name);
@@ -46,15 +45,23 @@ public class Anchor extends Entity implements Comparable<Anchor> {
 
     @Override
     public int compareTo(Anchor anchor) {
-        return this.threeDLocation.compareTo(anchor.threeDLocation);
+        return this.threeDLocation.compareTo(anchor.getLocation());
     }
 
     @Override
     public String toString() {
-        return "Anchor{" +
-                "name='" + name +
-                ",location=" + threeDLocation + '\'' +
-                '}';
+        return name;
+    }
+//    @Override
+//    public String toString() {
+//        return "Anchor{" +
+//                "name='" + name +
+//                ",location=" + threeDLocation + '\'' +
+//                '}';
+//    }
+
+    public ThreeDLocation getLocation() {
+        return this.threeDLocation;
     }
 //    public String toString() {
 //        return "Anchor{" +

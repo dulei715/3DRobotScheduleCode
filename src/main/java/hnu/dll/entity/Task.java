@@ -79,4 +79,8 @@ public class Task extends Entity {
     public String toString() {
         return name;
     }
+
+    public String getStartEndLocation() {
+        return startAnchor + "-->" + endAnchor;
+    }
 }

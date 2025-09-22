@@ -16,15 +16,10 @@ public class Stair extends Entity {
     private List<ThreeDLocation> innerNodeList;
     private Double segmentLength;
 
-    public Stair(String name, Building building, PlaneLocation planeLocation, List<ThreeDLocation> innerNodeList, Double segmentLength) {
+    public Stair(String name, Building building, PlaneLocation planeLocation) {
         super(name);
         this.planeLocation = planeLocation;
         resetBuilding(building);
-    }
-    public Stair(String name, Building building, PlaneLocation planeLocation) {
-        super(name);
-        this.building = building;
-        this.planeLocation = planeLocation;
     }
 
     public void resetBuilding(Building building) {

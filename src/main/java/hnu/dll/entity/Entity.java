@@ -1,5 +1,8 @@
 package hnu.dll.entity;
 
+import hnu.dll.basic_entity.location.Location;
+
+import java.util.Comparator;
 import java.util.UUID;
 
 public abstract class Entity implements Cloneable {
@@ -22,6 +25,10 @@ public abstract class Entity implements Cloneable {
 
     public String getName() {
         return name;
+    }
+
+    public String toSimpleString() {
+        return this.name;
     }
 
 }

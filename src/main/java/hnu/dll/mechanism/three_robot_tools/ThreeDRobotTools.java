@@ -445,7 +445,7 @@ public class ThreeDRobotTools {
             // 保证0时刻不会有电梯的请求
             Anchor beforeAnchor = singleSortedPathStructure.getFirst().getAnchorEntityByIndex(currentTimeIndex - 1).getAnchor();
             targetLayer = BasicFunctions.getLayer(beforeAnchor.getLocation());
-            // 征用电梯会带来一次电梯开门和一次电梯关门的消耗
+            // 征用电梯会带来两次电梯开门和一次电梯关门的消耗
 //            tempWaitedTimeSlots = BasicFunctions.getElevatorRunningTimeAndOpeningCloseDoorSlots(tempLastLayer, targetLayer, elevator.getVelocity(), Constant.OpenOrCloseDoorTimeCost, Constant.OpenOrCloseDoorTimeCost);
             tempWaitedTimeSlots = BasicFunctions.getElevatorRunningTimeAndOpeningCloseDoorSlots(tempLastLayer, targetLayer, elevator.getVelocity(), Constant.OpenOrCloseDoorTimeCost, 3);
             result.put(singleSortedPathStructure, new BasicPair<>(true, tempWaitedTimeSlots));
@@ -539,15 +539,38 @@ public class ThreeDRobotTools {
          */
         for (Map.Entry<SortedPathStructure<TimePointPath>, BasicPair<Boolean, Integer>> entry : timeWaitedMap.entrySet()) {
             tempStructure = entry.getKey();
-            tempPath = tempStructure.getFirst();
+            tempPath = tempStructure.getRemoveAndGetFirst();
             tempPair = entry.getValue();
             tempStatus = tempPair.getKey();
             tempDelaySlots = tempPair.getValue();
             if (tempStatus) {
                 // 处理胜利者的时延
+                /**
+                 * 在插入前首先要判断对该电梯的占用（体现在TimePointPath上）是否高于等待电梯时长+实际占用电梯的时长？
+                 * 如果大于说明曾经等待过电梯，那么就无需再插入
+                 * 要计算这个需要
+                 * 1. 获取电梯等待时间（已经在tempDelaySlots里了）
+                 * 2. 计算当前在TimePointPath上已经占用的时间
+                 * 3. 计算电梯通行需要的时间
+                 */
+                // 2. 计算当前在TimePointPath上已经占用的时间
+                Integer hasOccupiedTimeSlots = BasicFunctions.getOccupyingTimeSlotLengthFromGivenStartTime(tempPath, startTime);
+                // 3. 计算电梯通行需要的时间
+                Integer endTimeNextSlot = startTime + hasOccupiedTimeSlots;
+                Integer endTimeNextLayer = BasicFunctions.getGivenTimeSlotLayer(tempPath, endTimeNextSlot);
+                Integer startTimeBeforeLayer = BasicFunctions.getGivenTimeSlotLayer(tempPath, startTime - 1);
                 tempCurrentAnchorEntity = tempPath.getAnchorEntityByIndex(startTime);
-                // 这里从当前时间点插或从者后一个时间都可以，因为插的是同一个电梯
-                tempPath.insertAnchorEntity(tempCurrentAnchorEntity, startTime, tempDelaySlots);
+                Elevator currentElevator = (Elevator) tempCurrentAnchorEntity.getEntity();
+                Double crossFloorRunningTime = currentElevator.getCrossFloorRunningTime(startTimeBeforeLayer, endTimeNextLayer);
+
+                if (crossFloorRunningTime + tempDelaySlots > hasOccupiedTimeSlots) {
+                    // 这里从当前时间点插或从者后一个时间都可以，因为插的是同一个电梯
+                    tempPath.insertAnchorEntity(tempCurrentAnchorEntity, startTime, tempDelaySlots);
+//                    System.out.println("需要等待！");
+                } else {
+//                    System.out.println("已经等过了！");
+                }
+
             } else {
                 // 处理失败者的时延
                 // 假设一开始的0时刻没有冲突
@@ -555,6 +578,7 @@ public class ThreeDRobotTools {
                 tempLastAnchorEntity = tempPath.getAnchorEntityByIndex(startTime - 1);
                 tempPath.insertAnchorEntity(tempLastAnchorEntity, startTime, tempDelaySlots);
             }
+            tempStructure.addPath(tempPath);
             if (tempPath != tempStructure.getFirst()) {
                 flag = true;
             }
@@ -575,8 +599,10 @@ public class ThreeDRobotTools {
         CompeteStructure tempCompeteStructure;
         Map<AnchorEntity, SortedPathStructure<TimePointPath>> singleFirstElevatorOccupationMap;
         for (int i = 0; i < maximumPathLength; ++i) {
+
+
             conflictMapWithSingleElevatorProposal = getConflictMapWithElevatorSingleProposalSet(temporalPathMap.values(), i);
-//            if (!conflictMap.isEmpty()) {
+//            if (!conflictMapWithSingleElevatorProposal.isEmpty()) {
 //                System.out.println("haha");
 //            }
             tempCompeteStructure = getWinnerAndFailureMatch(conflictMapWithSingleElevatorProposal, i);
@@ -593,12 +619,29 @@ public class ThreeDRobotTools {
              *  4. 处理其他冲突
              */
             waitingTimeSet = getWaitingTimeSet(tempCompeteStructure, i);
+
+
+            int testSize = BasicFunctions.getMaximalTimeSlotLength(waitingTimeSet.keySet());
+            if (testSize > 0) {
+                System.out.println(i + ": " + testSize);
+//            if(i == 100) {
+//                System.out.println("100了！");
+//            }
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+
+            }
+
+
             flag = delayAndUpdate(waitingTimeSet, i);
             if (!conflictMapWithSingleElevatorProposal.isEmpty()) {
-                maximumPathLength = BasicFunctions.getMaximalTimeSlotLength(waitingTimeSet.keySet());
+                maximumPathLength = Math.max(maximumPathLength, BasicFunctions.getMaximalTimeSlotLength(waitingTimeSet.keySet()));
             }
             if (flag) {
-                i = 0;
+                i = -1;
                 Elevator.batchResetElevators(elevators);
             } else {
                 Elevator.batchUpdateElevators(elevators);
