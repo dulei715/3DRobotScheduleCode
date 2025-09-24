@@ -1,5 +1,6 @@
 package hnu.dll.mechanism.three_robot_tools;
 
+import cn.edu.dll.io.print.MyPrint;
 import hnu.dll.basic_entity.location.PlaneLocation;
 import hnu.dll.basic_entity.location.ThreeDLocation;
 import hnu.dll.config.Constant;
@@ -242,28 +243,28 @@ public class ThreeDRobotTools {
      * @param timeSlot
      * @return
      */
-    private static Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> getConflictMapWithElevatorSingleProposalSet(Collection<SortedPathStructure<TimePointPath>> temporalPathSet, Integer timeSlot) {
-        Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> result = new HashMap<>();
+    private static Map<Entity, Set<SortedPathStructure<TimePointPath>>> getConflictMapWithElevatorSingleProposalSet(Collection<SortedPathStructure<TimePointPath>> temporalPathSet, Integer timeSlot) {
+        Map<Entity, Set<SortedPathStructure<TimePointPath>>> result = new HashMap<>();
         TimePointPath tempPath;
         AnchorEntity tempAnchorEntity;
         Set<SortedPathStructure<TimePointPath>> tempSet;
-        Map.Entry<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> next;
+        Map.Entry<Entity, Set<SortedPathStructure<TimePointPath>>> next;
         for (SortedPathStructure<TimePointPath> pathStructure : temporalPathSet) {
             tempPath = pathStructure.getFirst();
             if (timeSlot >= tempPath.getTimeLength()) {
                 continue;
             }
             tempAnchorEntity = tempPath.getAnchorEntityByIndex(timeSlot);
-            result.computeIfAbsent(tempAnchorEntity, k->new HashSet<>()).add(pathStructure);
+            result.computeIfAbsent(tempAnchorEntity.getEntity(), k->new HashSet<>()).add(pathStructure);
 //            tempSet = result.getOrDefault(tempAnchorEntity, new HashSet<>());
 //            tempSet.add(pathStructure);
         }
-        Iterator<Map.Entry<AnchorEntity, Set<SortedPathStructure<TimePointPath>>>> iterator = result.entrySet().iterator();
+        Iterator<Map.Entry<Entity, Set<SortedPathStructure<TimePointPath>>>> iterator = result.entrySet().iterator();
         // 移除只含一个元素的集合，表示不冲突
         while (iterator.hasNext()) {
             next = iterator.next();
             // 只有当实体的占用不大于1(无冲突)且[占用的不是电梯或[是电梯但上个时刻已经占用了]时才移除]
-            Entity tempEntity = next.getKey().getEntity();
+            Entity tempEntity = next.getKey();
             Set<SortedPathStructure<TimePointPath>> tempStructureSet = next.getValue();
             if (tempStructureSet.size() <= 1 && (!(tempEntity instanceof Elevator) ||
                     (timeSlot > 0 && tempStructureSet.iterator().next().getFirst().getAnchorEntityByIndex(timeSlot-1).getEntity().equals(tempEntity)))) {
@@ -278,13 +279,13 @@ public class ThreeDRobotTools {
      * @param conflictMapWithElevatorProposal
      * @return
      */
-    protected static CompeteStructure getWinnerAndFailureMatch(Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> conflictMapWithElevatorProposal, Integer conflictTimeSlot) {
-        AnchorEntity tempAnchorEntity, beforeAnchorEntity;
+    protected static CompeteStructure getWinnerAndFailureMatch(Map<Entity, Set<SortedPathStructure<TimePointPath>>> conflictMapWithElevatorProposal, Integer conflictTimeSlot) {
+        Entity tempEntity, beforeEntity;
         Set<SortedPathStructure<TimePointPath>> tempPathStructureSet, failurePathStructureSet;
         SortedPathStructure<TimePointPath> winnerPath = null;
         Integer tempLength, maxLength;
         TimePointPath tempTimePointPath;
-        Map<AnchorEntity, BasicPair<SortedPathStructure<TimePointPath>, Set<SortedPathStructure<TimePointPath>>>> multipleMap, alreadyMap;
+        Map<Entity, BasicPair<SortedPathStructure<TimePointPath>, Set<SortedPathStructure<TimePointPath>>>> multipleMap, alreadyMap;
         /**
          * todo: 已修正
          * 1. 已经占用电梯的优先级最高
@@ -311,18 +312,18 @@ public class ThreeDRobotTools {
          *      (同2中对应的失败者)
          */
 
-        Map<AnchorEntity, SortedPathStructure<TimePointPath>> singleFirstElevatorOccupationMap = new HashMap<>();
-        Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> tempConflictMap = new HashMap<>(conflictMapWithElevatorProposal);
-        Iterator<Map.Entry<AnchorEntity, Set<SortedPathStructure<TimePointPath>>>> tempEntryIterator = tempConflictMap.entrySet().iterator();
-        Map.Entry<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> tempAnchorEntitySetEntry;
+        Map<Entity, SortedPathStructure<TimePointPath>> singleFirstElevatorOccupationMap = new HashMap<>();
+        Map<Entity, Set<SortedPathStructure<TimePointPath>>> tempConflictMap = new HashMap<>(conflictMapWithElevatorProposal);
+        Iterator<Map.Entry<Entity, Set<SortedPathStructure<TimePointPath>>>> tempEntryIterator = tempConflictMap.entrySet().iterator();
+        Map.Entry<Entity, Set<SortedPathStructure<TimePointPath>>> tempEntitySetEntry;
 
         while (tempEntryIterator.hasNext()) {
-            tempAnchorEntitySetEntry = tempEntryIterator.next();
-            tempAnchorEntity = tempAnchorEntitySetEntry.getKey();
-            tempPathStructureSet = tempAnchorEntitySetEntry.getValue();
+            tempEntitySetEntry = tempEntryIterator.next();
+            tempEntity = tempEntitySetEntry.getKey();
+            tempPathStructureSet = tempEntitySetEntry.getValue();
             if (tempPathStructureSet.size() <= 1) {
                 // 记录首次单个电梯占用
-                singleFirstElevatorOccupationMap.put(tempAnchorEntity, tempPathStructureSet.iterator().next());
+                singleFirstElevatorOccupationMap.put(tempEntity, tempPathStructureSet.iterator().next());
                 tempEntryIterator.remove();
             }
         }
@@ -331,16 +332,16 @@ public class ThreeDRobotTools {
         alreadyMap = new HashMap<>();
         tempEntryIterator = tempConflictMap.entrySet().iterator();
         while (conflictTimeSlot > 0 && tempEntryIterator.hasNext()) {
-            tempAnchorEntitySetEntry = tempEntryIterator.next();
-            tempAnchorEntity = tempAnchorEntitySetEntry.getKey();
-            tempPathStructureSet = tempAnchorEntitySetEntry.getValue();
+            tempEntitySetEntry = tempEntryIterator.next();
+            tempEntity = tempEntitySetEntry.getKey();
+            tempPathStructureSet = tempEntitySetEntry.getValue();
             for (SortedPathStructure<TimePointPath> tempPathStructure : tempPathStructureSet) {
                 tempTimePointPath = tempPathStructure.getFirst();
-                beforeAnchorEntity = tempTimePointPath.getAnchorEntityByIndex(conflictTimeSlot - 1);
-                if (beforeAnchorEntity.getEntity().equals(tempAnchorEntity.getEntity())) {
+                beforeEntity = tempTimePointPath.getAnchorEntityByIndex(conflictTimeSlot - 1).getEntity();
+                if (beforeEntity.equals(tempEntity)) {
                     failurePathStructureSet = new HashSet<>(tempPathStructureSet);
                     failurePathStructureSet.remove(tempPathStructure);
-                    alreadyMap.put(tempAnchorEntity, new BasicPair<>(tempPathStructure, failurePathStructureSet));
+                    alreadyMap.put(tempEntity, new BasicPair<>(tempPathStructure, failurePathStructureSet));
                     tempEntryIterator.remove();
                     break;
                 }
@@ -351,10 +352,10 @@ public class ThreeDRobotTools {
         multipleMap = new HashMap<>();
         tempEntryIterator = tempConflictMap.entrySet().iterator();
         while (tempEntryIterator.hasNext()) {
-            tempAnchorEntitySetEntry = tempEntryIterator.next();
+            tempEntitySetEntry = tempEntryIterator.next();
             maxLength = 0;
-            tempAnchorEntity = tempAnchorEntitySetEntry.getKey();
-            tempPathStructureSet = tempAnchorEntitySetEntry.getValue();
+            tempEntity = tempEntitySetEntry.getKey();
+            tempPathStructureSet = tempEntitySetEntry.getValue();
             for (SortedPathStructure<TimePointPath> tempPathStructure : tempPathStructureSet) {
                 tempLength = tempPathStructure.getFirst().getTimeLength();
                 if (tempLength > maxLength) {
@@ -364,7 +365,7 @@ public class ThreeDRobotTools {
             }
             failurePathStructureSet = new HashSet<>(tempPathStructureSet);
             failurePathStructureSet.remove(winnerPath);
-            multipleMap.put(tempAnchorEntity, new BasicPair<>(winnerPath, failurePathStructureSet));
+            multipleMap.put(tempEntity, new BasicPair<>(winnerPath, failurePathStructureSet));
         }
         return new CompeteStructure(singleFirstElevatorOccupationMap, multipleMap, alreadyMap);
     }
@@ -414,12 +415,11 @@ public class ThreeDRobotTools {
      * 因此如果pair的key是true，那表示这个路线是单个首次占用电梯的路线或者是多个首次占用电梯路线的胜利者
      */
     protected static Map<SortedPathStructure<TimePointPath>, BasicPair<Boolean, Integer>> getWaitingTimeSet(CompeteStructure competeStructure, Integer currentTimeIndex) {
-        Map<AnchorEntity, SortedPathStructure<TimePointPath>> singleMap = competeStructure.getSingleFirstElevatorRequirementMap();
-        Map<AnchorEntity, BasicPair<SortedPathStructure<TimePointPath>, Set<SortedPathStructure<TimePointPath>>>> multipleMap = competeStructure.getMultipleFirstRequirementMap();
-        Map<AnchorEntity, BasicPair<SortedPathStructure<TimePointPath>, Set<SortedPathStructure<TimePointPath>>>> alreadyMap = competeStructure.getAlreadyOccupiedMap();
+        Map<Entity, SortedPathStructure<TimePointPath>> singleMap = competeStructure.getSingleFirstElevatorRequirementMap();
+        Map<Entity, BasicPair<SortedPathStructure<TimePointPath>, Set<SortedPathStructure<TimePointPath>>>> multipleMap = competeStructure.getMultipleFirstRequirementMap();
+        Map<Entity, BasicPair<SortedPathStructure<TimePointPath>, Set<SortedPathStructure<TimePointPath>>>> alreadyMap = competeStructure.getAlreadyOccupiedMap();
         Map<SortedPathStructure<TimePointPath>, BasicPair<Boolean, Integer>> result = new HashMap<>();
-        AnchorEntity tempAnchorEntity;
-        Anchor tempAnchor;
+//        Anchor tempAnchor;
         Entity tempEntity;
         SortedPathStructure<TimePointPath> tempWinnerPathStructure, singleSortedPathStructure;
         Set<SortedPathStructure<TimePointPath>> failurePathSet;
@@ -437,10 +437,10 @@ public class ThreeDRobotTools {
          *    (3) 忽略添加后不再是top 1 情况的影响
          */
 
-        for (Map.Entry<AnchorEntity, SortedPathStructure<TimePointPath>> entry : singleMap.entrySet()) {
-            tempAnchorEntity = entry.getKey();
+        for (Map.Entry<Entity, SortedPathStructure<TimePointPath>> entry : singleMap.entrySet()) {
+            tempEntity = entry.getKey();
             singleSortedPathStructure = entry.getValue();
-            Elevator elevator = (Elevator) tempAnchorEntity.getEntity();
+            Elevator elevator = (Elevator) tempEntity;
             tempLastLayer = elevator.getCurrentLayer(currentTimeIndex);
             // 保证0时刻不会有电梯的请求
             Anchor beforeAnchor = singleSortedPathStructure.getFirst().getAnchorEntityByIndex(currentTimeIndex - 1).getAnchor();
@@ -454,20 +454,21 @@ public class ThreeDRobotTools {
          * 2. 处理同时多方首次占用某个实体的请求
          * todo: 更正：时间扩张图不要包含电梯开关门，电梯开关门只在请求电梯时计算
          */
-        for (Map.Entry<AnchorEntity, BasicPair<SortedPathStructure<TimePointPath>, Set<SortedPathStructure<TimePointPath>>>> entry : multipleMap.entrySet()) {
-            tempAnchorEntity = entry.getKey();
+        for (Map.Entry<Entity, BasicPair<SortedPathStructure<TimePointPath>, Set<SortedPathStructure<TimePointPath>>>> entry : multipleMap.entrySet()) {
+            tempEntity = entry.getKey();
             tempPair = entry.getValue();
             tempWinnerPathStructure = tempPair.getKey();
             tempFailurePathStructureSet = tempPair.getValue();
-            tempAnchor = tempAnchorEntity.getAnchor();
-            tempEntity = tempAnchorEntity.getEntity();
+//            tempAnchor = tempAnchorEntity.getAnchor();
             winnerTimePointPath = tempWinnerPathStructure.getFirst();
             timeSlotsLayerPair = getRemainingOccupiedTimeSlotsAndStopLayer(winnerTimePointPath, tempEntity, currentTimeIndex);
             remainOccupiedTimeSlots = timeSlotsLayerPair.getKey();
             if (tempEntity instanceof Elevator) {
                 Elevator elevator = (Elevator) tempEntity;
+                //todo:检查是否每个电梯结束时刻更新电梯所在层
                 tempLastLayer = elevator.getCurrentLayer(currentTimeIndex);
-                targetLayer = BasicFunctions.getLayer(tempAnchor.getLocation());
+//                targetLayer = BasicFunctions.getLayer(tempAnchor.getLocation());
+                targetLayer = BasicFunctions.getLayer(tempWinnerPathStructure.getFirst().getAnchorEntityByIndex(currentTimeIndex).getAnchor().getLocation());
                 // 成功者等待时间=电梯回来时间+3次电梯门时间
 //                winnerWaitedTimeSlot = BasicFunctions.getElevatorRunningTimeSlots(tempLastLayer, targetLayer, elevator.getVelocity());
                 winnerWaitedTimeSlot = BasicFunctions.getElevatorRunningTimeAndOpeningCloseDoorSlots(tempLastLayer, targetLayer, elevator.getVelocity(), Constant.ElevatorAverageVelocity, 3);
@@ -493,16 +494,15 @@ public class ThreeDRobotTools {
          * 3. 处理胜利者在前一时刻已经占用某个实体的请求
          */
         // 处理早已率先占用实体的情况
-        for (Map.Entry<AnchorEntity, BasicPair<SortedPathStructure<TimePointPath>, Set<SortedPathStructure<TimePointPath>>>> entry : alreadyMap.entrySet()) {
-            tempAnchorEntity = entry.getKey();
-            tempEntity = tempAnchorEntity.getEntity();
+        for (Map.Entry<Entity, BasicPair<SortedPathStructure<TimePointPath>, Set<SortedPathStructure<TimePointPath>>>> entry : alreadyMap.entrySet()) {
+            tempEntity = entry.getKey();
             tempPair = entry.getValue();
             tempWinnerPathStructure = tempPair.getKey();
             winnerTimePointPath = tempWinnerPathStructure.getFirst();
             tempFailurePathStructureSet = tempPair.getValue();
             timeSlotsLayerPair = getRemainingOccupiedTimeSlotsAndStopLayer(winnerTimePointPath, tempEntity, currentTimeIndex);
             remainOccupiedTimeSlots = timeSlotsLayerPair.getKey();
-            tempAnchor = tempAnchorEntity.getAnchor();
+//            tempAnchor = tempAnchorEntity.getAnchor();
             if (tempEntity instanceof Elevator) {
                 Elevator elevator = (Elevator) tempEntity;
                 tempLastLayer = timeSlotsLayerPair.getValue();
@@ -590,7 +590,7 @@ public class ThreeDRobotTools {
 
     protected static Integer eliminate(Map<BasicPair<Task, Robot>, SortedPathStructure<TimePointPath>> temporalPathMap, Collection<Elevator> elevators) {
         Integer maximumPathLength = getMaximumSpatialPathLength(temporalPathMap.values());
-        Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>> conflictMapWithSingleElevatorProposal;
+        Map<Entity, Set<SortedPathStructure<TimePointPath>>> conflictMapWithSingleElevatorProposal;
         Boolean flag = false;
         BasicPair<Map<AnchorEntity, SortedPathStructure<TimePointPath>>, Map<AnchorEntity, Set<SortedPathStructure<TimePointPath>>>> winFailurePair;
         Map<AnchorEntity, BasicPair<SortedPathStructure<TimePointPath>, Set<SortedPathStructure<TimePointPath>>>> multipleMap;
@@ -600,6 +600,9 @@ public class ThreeDRobotTools {
         Map<AnchorEntity, SortedPathStructure<TimePointPath>> singleFirstElevatorOccupationMap;
         for (int i = 0; i < maximumPathLength; ++i) {
 
+            if (i == 13) {
+                System.out.println("13了！");
+            }
 
             conflictMapWithSingleElevatorProposal = getConflictMapWithElevatorSingleProposalSet(temporalPathMap.values(), i);
 //            if (!conflictMapWithSingleElevatorProposal.isEmpty()) {
@@ -618,15 +621,20 @@ public class ThreeDRobotTools {
              *  3. 处理一个早已占用电梯+多个首次电梯请求冲突
              *  4. 处理其他冲突
              */
+
             waitingTimeSet = getWaitingTimeSet(tempCompeteStructure, i);
 
 
             int testSize = BasicFunctions.getMaximalTimeSlotLength(waitingTimeSet.keySet());
             if (testSize > 0) {
                 System.out.println(i + ": " + testSize);
-//            if(i == 100) {
-//                System.out.println("100了！");
-//            }
+                int k = 0;
+                for (SortedPathStructure<TimePointPath> pathStructure : waitingTimeSet.keySet()) {
+                    System.out.print(pathStructure.hashCode()+ "'s current location" + (++k) + " is: " + pathStructure.getFirst().getAnchorEntityByIndex(i));
+                    System.out.print("; "+pathStructure.hashCode()+"'s Before location " + (k) + " is: " + pathStructure.getFirst().getAnchorEntityByIndex(i-1));
+                    System.out.println();
+                }
+                MyPrint.showSplitLine("*", 200);
                 try {
                     Thread.sleep(200);
                 } catch (InterruptedException e) {

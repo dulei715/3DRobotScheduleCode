@@ -1,11 +1,9 @@
 package project_test;
 
-import cn.edu.dll.basic.BasicArrayUtil;
 import cn.edu.dll.basic.RandomUtil;
 import cn.edu.dll.io.print.MyPrint;
 import hnu.dll.config.Constant;
 import hnu.dll.control.BasicFunctions;
-import hnu.dll.control.BasicUtils;
 import hnu.dll.control.topk.AnchorEntityConvertor;
 import hnu.dll.control.topk.AnchorEntityTransform;
 import hnu.dll.data.DatasetGenerator;
@@ -25,7 +23,7 @@ import java.util.*;
 
 public class ProjectGenerationTest {
 
-    public static Random random = new Random(13);
+    public static Random random = new Random(17);
 
     public static DatasetStructure modelDatasetStructure;
     public static DatasetStructure finalDatasetStructure;
